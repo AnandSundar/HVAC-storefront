@@ -48,9 +48,11 @@ class PartApiTest extends TestCase
 
     public function test_show_returns_single_part(): void
     {
+        // {part} binds by part_number, not by primary key. The public contract
+        // is the human-readable SKU; recruiters demo against it.
         $part = Part::first();
 
-        $response = $this->getJson("/api/parts/{$part->id}");
+        $response = $this->getJson("/api/parts/{$part->part_number}");
 
         $response->assertOk();
         $response->assertJson([
@@ -63,7 +65,9 @@ class PartApiTest extends TestCase
 
     public function test_show_returns_404_for_missing_part(): void
     {
-        $response = $this->getJson('/api/parts/99999');
+        // 404 path now goes through the binding resolver (firstOrFail), not
+        // a numeric route constraint.
+        $response = $this->getJson('/api/parts/UNKNOWN-999');
 
         $response->assertNotFound();
     }
