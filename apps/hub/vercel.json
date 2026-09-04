@@ -1,0 +1,7 @@
+{
+  "buildCommand": "pnpm turbo run build --filter=hub",
+  "devCommand": "pnpm turbo run dev --filter=hub",
+  "installCommand": "pnpm install",
+  "framework": "nextjs",
+  "regions": ["iad1"]
+}
