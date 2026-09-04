@@ -6,6 +6,7 @@
         "name": "next"
       }
     ],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "jsx": "preserve",
     "incremental": true,
     "baseUrl": ".",

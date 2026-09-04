@@ -1,0 +1,269 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('server-only', () => ({}));
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
+
+function jsonResponse(body: unknown, status = 200, statusText?: string): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    statusText: statusText ?? statusTextFor(status),
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+/** Mirrors the standard Node/http status texts happy-dom doesn't always set. */
+function statusTextFor(status: number): string {
+  switch (status) {
+    case 200: return 'OK';
+    case 201: return 'Created';
+    case 404: return 'Not Found';
+    case 422: return 'Unprocessable Entity';
+    case 500: return 'Internal Server Error';
+    case 503: return 'Service Unavailable';
+    default: return '';
+  }
+}
+
+const fixturePart = {
+  id: 1,
+  part_number: 'PHP-001',
+  name: 'Filter A',
+  description: 'HVAC filter',
+  unit_cost: '89.99',
+  inventory_qty: 100,
+  bin_location: 'A1',
+  category: 'Filters',
+  manufacturer: 'Honeywell',
+  created_at: '2026-01-01T00:00:00.000000Z',
+  updated_at: '2026-01-01T00:00:00.000000Z',
+};
+
+const ADMIN_TOKEN = 'test-secret';
+
+describe('listParts', () => {
+  it('attaches X-Admin-Token and queries with ?per_page=100', async () => {
+    const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
+      const headers = init?.headers as Record<string, string> | undefined;
+      expect(headers?.['X-Admin-Token']).toBe(ADMIN_TOKEN);
+      return jsonResponse({ data: [fixturePart] });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const { listParts } = await import('../../src/lib/parts');
+    const parts = await listParts(ADMIN_TOKEN);
+    expect(parts).toHaveLength(1);
+    expect(parts[0]?.part_number).toBe('PHP-001');
+    expect(String(fetchMock.mock.calls[0]?.[0])).toContain('/api/parts?per_page=100');
+  });
+
+  it('throws PartsFetchError with sanitized body on 422', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse(
+          {
+            message: 'The given data was invalid.',
+            errors: { unit_cost: ['Unit cost must be at least 0.'] },
+          },
+          422,
+        ),
+      ),
+    );
+    const { listParts, PartsFetchError } = await import('../../src/lib/parts');
+    await expect(listParts(ADMIN_TOKEN)).rejects.toMatchObject({
+      status: 422,
+      body: { errors: { unit_cost: ['Unit cost must be at least 0.'] } },
+    });
+    await expect(listParts(ADMIN_TOKEN)).rejects.toBeInstanceOf(PartsFetchError);
+  });
+
+  it('drops non-validation fields from a 422 body', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse(
+          {
+            message: 'drop me',
+            errors: { name: ['Name is required.'] },
+            exception: 'Symfony\\Component\\HttpKernel\\Exception\\HttpException',
+            file: '/var/www/app/Http/Requests/StorePartRequest.php',
+          },
+          422,
+        ),
+      ),
+    );
+    const { listParts, PartsFetchError } = await import('../../src/lib/parts');
+    const err = await listParts(ADMIN_TOKEN).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(PartsFetchError);
+    const body = (err as InstanceType<typeof PartsFetchError>).body;
+    expect(body).toEqual({ errors: { name: ['Name is required.'] } });
+    expect(body).not.toHaveProperty('message');
+    expect(body).not.toHaveProperty('exception');
+    expect(body).not.toHaveProperty('file');
+  });
+
+  it('throws a generic PartsFetchError on 500', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse({ exception: 'SQLSTATE...', file: '/var/...' }, 500)),
+    );
+    const { listParts, PartsFetchError } = await import('../../src/lib/parts');
+    const err = await listParts(ADMIN_TOKEN).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(PartsFetchError);
+    expect((err as InstanceType<typeof PartsFetchError>).status).toBe(500);
+    expect((err as InstanceType<typeof PartsFetchError>).body).toEqual({ error: 'Internal Server Error' });
+  });
+
+  it('throws PartsFetchError with status 0 and "Request timeout" on AbortError', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, init?: RequestInit) => {
+        return new Promise((_, reject) => {
+          init?.signal?.addEventListener('abort', () => {
+            const err = new Error('aborted');
+            err.name = 'AbortError';
+            reject(err);
+          });
+        });
+      }),
+    );
+    const { listParts, PartsFetchError } = await import('../../src/lib/parts');
+    const promise = listParts(ADMIN_TOKEN).catch((e: unknown) => e);
+    await vi.advanceTimersByTimeAsync(5_001);
+    const err = await promise;
+    vi.useRealTimers();
+    expect(err).toBeInstanceOf(PartsFetchError);
+    expect((err as InstanceType<typeof PartsFetchError>).status).toBe(0);
+    expect((err as InstanceType<typeof PartsFetchError>).body).toEqual({ error: 'Request timeout' });
+  });
+
+  it('throws PartsFetchError with status 0 and "Network error" on a network failure', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new TypeError('Failed to fetch');
+      }),
+    );
+    const { listParts, PartsFetchError } = await import('../../src/lib/parts');
+    const err = await listParts(ADMIN_TOKEN).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(PartsFetchError);
+    expect((err as InstanceType<typeof PartsFetchError>).body).toEqual({ error: 'Network error' });
+  });
+});
+
+describe('getPart', () => {
+  it('URL-encodes the SKU path segment', async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      // The slash in the submitted SKU is encoded to %2F by encodeURIComponent.
+      expect(String(url)).toBe('http://localhost:8000/api/parts/PHP%2F001');
+      return jsonResponse({ data: fixturePart });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const { getPart } = await import('../../src/lib/parts');
+    const part = await getPart(ADMIN_TOKEN, 'PHP/001');
+    expect(part.part_number).toBe('PHP-001');
+  });
+
+  it('throws PartsFetchError with status 404 when the part is missing', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({ message: 'not found' }, 404)));
+    const { getPart, PartsFetchError } = await import('../../src/lib/parts');
+    const err = await getPart(ADMIN_TOKEN, 'PHP-MISSING').catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(PartsFetchError);
+    expect((err as InstanceType<typeof PartsFetchError>).status).toBe(404);
+  });
+});
+
+describe('createPart', () => {
+  it('POSTs to /api/parts with the JSON body', async () => {
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      expect(String(url)).toBe('http://localhost:8000/api/parts');
+      expect(init?.method).toBe('POST');
+      const body = JSON.parse(init?.body as string);
+      expect(body).toMatchObject({
+        part_number: 'PHP-NEW',
+        unit_cost: 12.5,
+        category: 'Filters',
+      });
+      return jsonResponse({ data: { ...fixturePart, part_number: 'PHP-NEW' } }, 201);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const { createPart } = await import('../../src/lib/parts');
+    const part = await createPart(ADMIN_TOKEN, {
+      part_number: 'PHP-NEW',
+      name: 'X',
+      description: 'Y',
+      unit_cost: 12.5,
+      inventory_qty: 1,
+      bin_location: null,
+      category: 'Filters',
+      manufacturer: 'M',
+    });
+    expect(part.part_number).toBe('PHP-NEW');
+  });
+});
+
+describe('updatePart', () => {
+  it('PATCHes /api/parts/{part}', async () => {
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      expect(String(url)).toBe('http://localhost:8000/api/parts/PHP-001');
+      expect(init?.method).toBe('PATCH');
+      return jsonResponse({ data: fixturePart });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const { updatePart } = await import('../../src/lib/parts');
+    const part = await updatePart(ADMIN_TOKEN, 'PHP-001', { inventory_qty: 50 });
+    expect(part.part_number).toBe('PHP-001');
+  });
+});
+
+describe('formDataToCreateInput', () => {
+  it('coerces numeric fields and trims strings', async () => {
+    const { formDataToCreateInput } = await import('../../src/lib/parts');
+    const fd = new FormData();
+    fd.set('part_number', '  PHP-X  ');
+    fd.set('name', '  Filter X ');
+    fd.set('description', '  desc ');
+    fd.set('unit_cost', '89.99');
+    fd.set('inventory_qty', '50');
+    fd.set('bin_location', '');
+    fd.set('category', 'Filters');
+    fd.set('manufacturer', '  Honeywell ');
+    const input = formDataToCreateInput(fd);
+    expect(input).toEqual({
+      part_number: 'PHP-X',
+      name: 'Filter X',
+      description: 'desc',
+      unit_cost: 89.99,
+      inventory_qty: 50,
+      bin_location: null,
+      category: 'Filters',
+      manufacturer: 'Honeywell',
+    });
+  });
+});
+
+describe('formDataToUpdateInput', () => {
+  it('omits empty fields', async () => {
+    const { formDataToUpdateInput } = await import('../../src/lib/parts');
+    const fd = new FormData();
+    fd.set('unit_cost', '99.00');
+    fd.set('inventory_qty', '');
+    fd.set('name', '');
+    const input = formDataToUpdateInput(fd);
+    expect(input).toEqual({ unit_cost: 99.0 });
+  });
+
+  it('preserves provided fields', async () => {
+    const { formDataToUpdateInput } = await import('../../src/lib/parts');
+    const fd = new FormData();
+    fd.set('name', 'New Name');
+    fd.set('inventory_qty', '25');
+    fd.set('bin_location', 'B2');
+    const input = formDataToUpdateInput(fd);
+    expect(input).toEqual({ name: 'New Name', inventory_qty: 25, bin_location: 'B2' });
+  });
+});
