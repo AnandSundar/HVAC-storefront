@@ -1,0 +1,21 @@
+{
+  "name": "@hvac-portfolio/shared-data",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./products": "./src/products.ts",
+    "./categories": "./src/categories.ts",
+    "./types": "./src/types.ts"
+  },
+  "scripts": {
+    "lint": "echo 'shared-data is type-only'",
+    "typecheck": "tsc --noEmit",
+    "test": "echo 'no tests for shared-data' && exit 0",
+    "build": "echo 'shared-data is source-only, no build' && exit 0",
+    "clean": "rm -rf .turbo .tsbuildinfo"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

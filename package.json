@@ -1,0 +1,23 @@
+{
+  "name": "hvac-fullstack-portfolio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Recruiter-facing portfolio monorepo demonstrating Next.js, Node.js + GraphQL, PHP, and TypeScript.",
+  "packageManager": "pnpm@11.5.2",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "typescript": "^5.7.2"
+  }
+}
