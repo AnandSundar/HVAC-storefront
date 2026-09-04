@@ -2,10 +2,36 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('server-only', () => ({}));
 
+// revalidatePath runs from next/cache. The submitPartAction pulls it in as
+// a transitive import; mock it so the test doesn't try to hit the runtime
+// tag system.
+vi.mock('next/cache', () => ({
+  revalidatePath: vi.fn(),
+}));
+
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
+
+function createFormData(values: Record<string, string>): FormData {
+  const fd = new FormData();
+  for (const [key, value] of Object.entries(values)) {
+    fd.set(key, value);
+  }
+  return fd;
+}
+
+const VALID_CREATE = {
+  part_number: 'PHP-NEW',
+  name: 'HVAC Filter',
+  description: 'A reusable filter',
+  unit_cost: '12.50',
+  inventory_qty: '10',
+  bin_location: 'A-1-3',
+  category: 'Filters',
+  manufacturer: 'Honeywell',
+};
 
 function jsonResponse(body: unknown, status = 200, statusText?: string): Response {
   return new Response(JSON.stringify(body), {
@@ -265,5 +291,185 @@ describe('formDataToUpdateInput', () => {
     fd.set('bin_location', 'B2');
     const input = formDataToUpdateInput(fd);
     expect(input).toEqual({ name: 'New Name', inventory_qty: 25, bin_location: 'B2' });
+  });
+});
+
+describe('submitPartAction – create', () => {
+  it('returns { ok: true, redirectTo } with ?created=<sku> on a successful POST', async () => {
+    const createdPart = { ...fixturePart, part_number: 'PHP-NEW' };
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      expect(String(url)).toBe('http://localhost:8000/api/parts');
+      expect(init?.method).toBe('POST');
+      const headers = init?.headers as Record<string, string> | undefined;
+      expect(headers?.['X-Admin-Token']).toBe(ADMIN_TOKEN);
+      const body = JSON.parse(init?.body as string);
+      expect(body).toMatchObject({
+        part_number: 'PHP-NEW',
+        unit_cost: 12.5,
+        category: 'Filters',
+      });
+      return jsonResponse({ data: createdPart }, 201);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const { submitPartAction } = await import('../../src/lib/parts');
+    const result = await submitPartAction(
+      'create',
+      null,
+      ADMIN_TOKEN,
+      undefined,
+      createFormData(VALID_CREATE),
+    );
+    expect(result).toEqual({
+      ok: true,
+      redirectTo: '/admin/inventory?created=PHP-NEW',
+    });
+  });
+
+  it('returns { ok: false, fieldErrors } when a required field is missing (no fetch issued)', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const { submitPartAction } = await import('../../src/lib/parts');
+    const partial = { ...VALID_CREATE };
+    delete (partial as Record<string, string>).name;
+    const result = await submitPartAction(
+      'create',
+      null,
+      ADMIN_TOKEN,
+      undefined,
+      createFormData(partial as Record<string, string>),
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.fieldErrors.name).toBeDefined();
+      expect(result.fieldErrors.name?.[0]).toMatch(/required/i);
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('propagates a Laravel 422 as { ok: false, fieldErrors } keyed by field name', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse(
+          {
+            message: 'The given data was invalid.',
+            errors: {
+              unit_cost: ['Unit cost must be at least 0.'],
+              manufacturer: ['Manufacturer is required.'],
+            },
+          },
+          422,
+        ),
+      ),
+    );
+    const { submitPartAction } = await import('../../src/lib/parts');
+    const result = await submitPartAction(
+      'create',
+      null,
+      ADMIN_TOKEN,
+      undefined,
+      createFormData(VALID_CREATE),
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.fieldErrors.unit_cost?.[0]).toBe('Unit cost must be at least 0.');
+      expect(result.fieldErrors.manufacturer?.[0]).toBe('Manufacturer is required.');
+      // No top-level `error` set for 422 — the field-level errors ARE the
+      // feedback.
+      expect(result.error).toBeUndefined();
+    }
+  });
+
+  it('returns { ok: false, error } for a non-422 upstream failure (e.g. 500)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse({ exception: 'SQLSTATE...' }, 500)),
+    );
+    const { submitPartAction } = await import('../../src/lib/parts');
+    const result = await submitPartAction(
+      'create',
+      null,
+      ADMIN_TOKEN,
+      undefined,
+      createFormData(VALID_CREATE),
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBe('Internal Server Error');
+      expect(result.fieldErrors).toEqual({});
+    }
+  });
+
+  it('returns { ok: false, error } for a network error', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new TypeError('Failed to fetch');
+      }),
+    );
+    const { submitPartAction } = await import('../../src/lib/parts');
+    const result = await submitPartAction(
+      'create',
+      null,
+      ADMIN_TOKEN,
+      undefined,
+      createFormData(VALID_CREATE),
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBe('Network error');
+    }
+  });
+});
+
+describe('submitPartAction – edit', () => {
+  it('returns { ok: true, redirectTo } with ?updated=<sku> on a successful PATCH', async () => {
+    const updatedPart = { ...fixturePart, inventory_qty: 50 };
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      expect(String(url)).toBe('http://localhost:8000/api/parts/PHP-001');
+      expect(init?.method).toBe('PATCH');
+      return jsonResponse({ data: updatedPart });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const { submitPartAction } = await import('../../src/lib/parts');
+    const fd = new FormData();
+    fd.set('inventory_qty', '50');
+    const result = await submitPartAction(
+      'edit',
+      'PHP-001',
+      ADMIN_TOKEN,
+      undefined,
+      fd,
+    );
+    expect(result).toEqual({
+      ok: true,
+      redirectTo: '/admin/inventory?updated=PHP-001',
+    });
+  });
+
+  it('returns { ok: false, fieldErrors } on a 422 from the edit (Zod passes, PHP rejects)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse(
+          { message: 'invalid', errors: { inventory_qty: ['Out of range for this SKU.'] } },
+          422,
+        ),
+      ),
+    );
+    const { submitPartAction } = await import('../../src/lib/parts');
+    const fd = new FormData();
+    fd.set('inventory_qty', '999999');
+    const result = await submitPartAction(
+      'edit',
+      'PHP-001',
+      ADMIN_TOKEN,
+      undefined,
+      fd,
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.fieldErrors.inventory_qty?.[0]).toBe('Out of range for this SKU.');
+    }
   });
 });

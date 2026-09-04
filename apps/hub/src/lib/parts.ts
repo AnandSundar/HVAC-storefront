@@ -1,5 +1,4 @@
 import 'server-only';
-import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import {
   createPartSchema,
@@ -285,6 +284,12 @@ export function formDataToUpdateInput(formData: FormData): UpdatePartInput {
  * Mapping rule for Laravel 422 responses: `errors → fieldErrors` (key rename
  * only; `string[]` values pass through verbatim). The client component
  * renders `fieldErrors[field][0]` below each input.
+ *
+ * On success the action returns `{ ok: true, redirectTo }` and the client
+ * navigates with `router.push(redirectTo)` + `router.refresh()`. We avoid
+ * calling `redirect()` from inside the action because that bypasses the
+ * client-side side-effects (revalidation triggers, focus management, etc.)
+ * that the client component owns in the `useActionState` flow.
  */
 export async function submitPartAction(
   mode: 'create' | 'edit',
@@ -292,38 +297,45 @@ export async function submitPartAction(
   token: string,
   _prev: unknown,
   formData: FormData,
-): Promise<{ ok: true; redirectTo: string } | { ok: false; fieldErrors: Record<string, string[]>; error?: string }> {
-  let resultPart: Part;
+): Promise<
+  | { ok: true; redirectTo: string }
+  | { ok: false; fieldErrors: Record<string, string[]>; error?: string }
+> {
+  'use server';
   if (mode === 'create') {
     const input = formDataToCreateInput(formData);
     const parsed = createPartSchema.safeParse(input);
     if (!parsed.success) {
       return { ok: false, fieldErrors: issuesToFieldErrors(parsed.error.issues) };
     }
+    let resultPart: Part;
     try {
       resultPart = await createPart(token, parsed.data);
     } catch (err) {
       return fetchErrorToState(err);
     }
     revalidatePath('/admin/inventory');
-    redirect(`/admin/inventory?created=${encodeURIComponent(resultPart.part_number)}`);
-  } else {
-    const input = formDataToUpdateInput(formData);
-    const parsed = updatePartSchema.safeParse(input);
-    if (!parsed.success) {
-      return { ok: false, fieldErrors: issuesToFieldErrors(parsed.error.issues) };
-    }
-    try {
-      resultPart = await updatePart(token, partNumber as string, parsed.data);
-    } catch (err) {
-      return fetchErrorToState(err);
-    }
-    revalidatePath('/admin/inventory');
-    redirect(`/admin/inventory?updated=${encodeURIComponent(resultPart.part_number)}`);
+    return {
+      ok: true,
+      redirectTo: `/admin/inventory?created=${encodeURIComponent(resultPart.part_number)}`,
+    };
   }
-  // Unreachable: redirect() always throws. TypeScript needs an explicit return
-  // because the branching above doesn't prove exhaustiveness to the compiler.
-  return { ok: false, fieldErrors: {}, error: 'Unexpected error' };
+  const input = formDataToUpdateInput(formData);
+  const parsed = updatePartSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, fieldErrors: issuesToFieldErrors(parsed.error.issues) };
+  }
+  let resultPart: Part;
+  try {
+    resultPart = await updatePart(token, partNumber as string, parsed.data);
+  } catch (err) {
+    return fetchErrorToState(err);
+  }
+  revalidatePath('/admin/inventory');
+  return {
+    ok: true,
+    redirectTo: `/admin/inventory?updated=${encodeURIComponent(resultPart.part_number)}`,
+  };
 }
 
 function issuesToFieldErrors(issues: { path: (string | number)[]; message: string }[]): Record<string, string[]> {
@@ -336,10 +348,6 @@ function issuesToFieldErrors(issues: { path: (string | number)[]; message: strin
 }
 
 function fetchErrorToState(err: unknown): { ok: false; fieldErrors: Record<string, string[]>; error?: string } {
-  // re-throw redirect signals so Next.js can handle them
-  if (err && typeof err === 'object' && 'digest' in err && typeof (err as { digest?: unknown }).digest === 'string' && (err as { digest: string }).digest.startsWith('NEXT_REDIRECT')) {
-    throw err;
-  }
   if (err instanceof PartsFetchError) {
     if (err.status === 422 && err.body.errors) {
       return { ok: false, fieldErrors: err.body.errors };
