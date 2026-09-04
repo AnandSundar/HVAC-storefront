@@ -4,7 +4,7 @@ import { useActionState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, Save } from 'lucide-react';
-import { submitPartAction } from '@/lib/parts';
+import { submitPartAction } from '@/lib/parts-actions';
 import { CATEGORIES } from '@/lib/part-schema';
 
 type FormState =

@@ -311,7 +311,7 @@ describe('submitPartAction – create', () => {
       return jsonResponse({ data: createdPart }, 201);
     });
     vi.stubGlobal('fetch', fetchMock);
-    const { submitPartAction } = await import('../../src/lib/parts');
+    const { submitPartAction } = await import('../../src/lib/parts-actions');
     const result = await submitPartAction(
       'create',
       null,
@@ -328,7 +328,7 @@ describe('submitPartAction – create', () => {
   it('returns { ok: false, fieldErrors } when a required field is missing (no fetch issued)', async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
-    const { submitPartAction } = await import('../../src/lib/parts');
+    const { submitPartAction } = await import('../../src/lib/parts-actions');
     const partial = { ...VALID_CREATE };
     delete (partial as Record<string, string>).name;
     const result = await submitPartAction(
@@ -362,7 +362,7 @@ describe('submitPartAction – create', () => {
         ),
       ),
     );
-    const { submitPartAction } = await import('../../src/lib/parts');
+    const { submitPartAction } = await import('../../src/lib/parts-actions');
     const result = await submitPartAction(
       'create',
       null,
@@ -385,7 +385,7 @@ describe('submitPartAction – create', () => {
       'fetch',
       vi.fn(async () => jsonResponse({ exception: 'SQLSTATE...' }, 500)),
     );
-    const { submitPartAction } = await import('../../src/lib/parts');
+    const { submitPartAction } = await import('../../src/lib/parts-actions');
     const result = await submitPartAction(
       'create',
       null,
@@ -407,7 +407,7 @@ describe('submitPartAction – create', () => {
         throw new TypeError('Failed to fetch');
       }),
     );
-    const { submitPartAction } = await import('../../src/lib/parts');
+    const { submitPartAction } = await import('../../src/lib/parts-actions');
     const result = await submitPartAction(
       'create',
       null,
@@ -431,7 +431,7 @@ describe('submitPartAction – edit', () => {
       return jsonResponse({ data: updatedPart });
     });
     vi.stubGlobal('fetch', fetchMock);
-    const { submitPartAction } = await import('../../src/lib/parts');
+    const { submitPartAction } = await import('../../src/lib/parts-actions');
     const fd = new FormData();
     fd.set('inventory_qty', '50');
     const result = await submitPartAction(
@@ -457,7 +457,7 @@ describe('submitPartAction – edit', () => {
         ),
       ),
     );
-    const { submitPartAction } = await import('../../src/lib/parts');
+    const { submitPartAction } = await import('../../src/lib/parts-actions');
     const fd = new FormData();
     fd.set('inventory_qty', '999999');
     const result = await submitPartAction(
