@@ -1,0 +1,24 @@
+# Render Blueprint — one-click deploy for the Node.js GraphQL API.
+# Apply at https://render.com/deploy?repo=<your-github-repo> or via the
+# Render dashboard → New → Blueprint → select this repo.
+
+services:
+  - type: web
+    name: hvac-fullstack-portfolio-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
+      - key: ADMIN_TOKEN
+        generateValue: true
+      - key: STOREFRONT_URL
+        value: https://hvac-fullstack-portfolio-storefront.vercel.app
