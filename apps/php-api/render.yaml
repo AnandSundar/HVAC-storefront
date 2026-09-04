@@ -1,0 +1,36 @@
+# Render Blueprint for the PHP API.
+# Docs: https://render.com/docs/blueprint-spec
+#
+# This file enables a one-click deploy from the README button:
+#   https://render.com/deploy?repo=<your-repo-url>
+#
+# Free-tier constraint: Render allows ONE free web service per account.
+# The Node GraphQL API is the live deploy; the PHP API is delivered via
+# this button so the recruiter can spin up their own.
+
+services:
+  - type: web
+    name: php-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /up
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        generateValue: true
+      - key: DB_CONNECTION
+        value: sqlite
+      - key: DB_DATABASE
+        value: /var/www/html/database/database.sqlite
+      # CORS: set this to your storefront domain in production.
+      # Leave blank to allow all origins (dev default).
+      - key: CORS_ALLOWED_ORIGINS
+        value: ""
+      # ADMIN_TOKEN: intentionally NOT set here. Fail-closed: every
+      # POST is rejected until the operator sets ADMIN_TOKEN in the
+      # Render dashboard.
