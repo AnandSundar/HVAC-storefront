@@ -16,6 +16,11 @@ export interface Product {
   category: ProductCategory;
   manufacturer: string;
   specs?: Record<string, string>;
+  /**
+   * Public CDN URL for a real product photo (typically images.unsplash.com).
+   * Optional: legacy fixtures or admin-created products may omit it.
+   */
+  imageUrl?: string;
 }
 
 export interface Category {

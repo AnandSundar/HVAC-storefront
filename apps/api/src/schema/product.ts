@@ -22,6 +22,7 @@ export interface CreateProductInput {
   stock: number;
   category: string;
   manufacturer: string;
+  imageUrl?: string | null;
 }
 
 /**
@@ -37,6 +38,11 @@ export const createProductInputSchema = z.object({
   stock: z.number().int().nonnegative('stock must be a non-negative integer'),
   category: z.enum(PRODUCT_CATEGORIES),
   manufacturer: z.string().min(1, 'manufacturer must not be empty'),
+  imageUrl: z
+    .string()
+    .url('imageUrl must be a valid URL')
+    .nullable()
+    .optional(),
 });
 
 /**
@@ -85,6 +91,12 @@ export function registerProductSchema(
         description: 'Free-form technical specifications.',
         resolve: (parent) => parent.specs ?? null,
       }),
+      imageUrl: t.exposeString('imageUrl', {
+        nullable: true,
+        description:
+          'Public CDN URL for a real product photo (typically images.unsplash.com). ' +
+          'Null when the product has no photo on file.',
+      }),
     }),
   });
 
@@ -101,6 +113,11 @@ export function registerProductSchema(
       stock: t.int({ required: true }),
       category: t.string({ required: true }),
       manufacturer: t.string({ required: true }),
+      imageUrl: t.string({
+        required: false,
+        description:
+          'Optional public URL for a product photo (typically images.unsplash.com).',
+      }),
     }),
   });
 
@@ -167,6 +184,7 @@ export function registerProductSchema(
           stock: input.stock,
           category: input.category as ProductCategory,
           manufacturer: input.manufacturer,
+          ...(input.imageUrl ? { imageUrl: input.imageUrl } : {}),
         };
         return addProduct(newProduct);
       },

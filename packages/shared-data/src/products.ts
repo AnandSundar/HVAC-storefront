@@ -1,5 +1,22 @@
 import type { Product } from './types.js';
 
+/**
+ * Real product photos for the demo catalog, sourced from Unsplash.
+ *
+ * Each product is paired with an HVAC-themed Unsplash photo that loads
+ * directly from images.unsplash.com. The `?w=800&h=600&fit=crop&auto=format&q=80`
+ * query string tells Unsplash's CDN to serve a single 800x600 cropped
+ * WebP/AVIF/JPEG at ~80% quality. Next.js `<Image>` then resizes per
+ * usage site.
+ *
+ * Stability: Unsplash photo IDs are permanent. If a photo is removed,
+ * the URL 404s — swap the ID. The mapping here was hand-curated from
+ * real Unsplash HVAC / thermostat / motor / circuit-board search results.
+ */
+
+const IMG = (id: string): string =>
+  `https://images.unsplash.com/photo-${id}?w=800&h=600&fit=crop&auto=format&q=80`;
+
 export const products: Product[] = [
   // Furnaces (5)
   {
@@ -12,6 +29,7 @@ export const products: Product[] = [
     category: 'Furnaces',
     manufacturer: 'Trane',
     specs: { afue: '96%', btu: '80000', venting: 'Direct vent' },
+    imageUrl: IMG('1776860155275-eee24bfb1dee'),
   },
   {
     id: 'p002',
@@ -23,6 +41,7 @@ export const products: Product[] = [
     category: 'Furnaces',
     manufacturer: 'Lennox',
     specs: { afue: '96%', btu: '100000', venting: 'Direct vent' },
+    imageUrl: IMG('1751486289950-5c4898a4c773'),
   },
   {
     id: 'p003',
@@ -34,6 +53,7 @@ export const products: Product[] = [
     category: 'Furnaces',
     manufacturer: 'Carrier',
     specs: { afue: '95%', btu: '60000' },
+    imageUrl: IMG('1564414549740-e6dab6bc6f20'),
   },
   {
     id: 'p004',
@@ -45,6 +65,7 @@ export const products: Product[] = [
     category: 'Furnaces',
     manufacturer: 'Goodman',
     specs: { afue: '96%', btu: '80000' },
+    imageUrl: IMG('1671671584537-5da98a2a884f'),
   },
   {
     id: 'p005',
@@ -56,6 +77,7 @@ export const products: Product[] = [
     category: 'Furnaces',
     manufacturer: 'Rheem',
     specs: { afue: '96%', btu: '80000' },
+    imageUrl: IMG('1773517459046-3f2fc602c35b'),
   },
 
   // Filters (5)
@@ -69,6 +91,7 @@ export const products: Product[] = [
     category: 'Filters',
     manufacturer: 'Filtrete',
     specs: { merv: '12', size: '16x25x1', mpr: '1500' },
+    imageUrl: IMG('1756575433595-c2f87d10e5f4'),
   },
   {
     id: 'p007',
@@ -80,6 +103,7 @@ export const products: Product[] = [
     category: 'Filters',
     manufacturer: 'Honeywell',
     specs: { merv: '13', size: '20x25x4' },
+    imageUrl: IMG('1632928274371-878938e4d825'),
   },
   {
     id: 'p008',
@@ -91,6 +115,7 @@ export const products: Product[] = [
     category: 'Filters',
     manufacturer: 'AprilAire',
     specs: { merv: '13', size: '20x25x4' },
+    imageUrl: IMG('1436473849883-bb3464c23e93'),
   },
   {
     id: 'p009',
@@ -102,6 +127,7 @@ export const products: Product[] = [
     category: 'Filters',
     manufacturer: 'Nordic Pure',
     specs: { merv: '10', size: '16x20x1', pack: '12' },
+    imageUrl: IMG('1588294020274-1e23a4815b72'),
   },
   {
     id: 'p010',
@@ -113,6 +139,7 @@ export const products: Product[] = [
     category: 'Filters',
     manufacturer: 'Filtrete',
     specs: { merv: '13', mpr: '2800', size: '14x14x1' },
+    imageUrl: IMG('1642620954915-a57b1d0404ea'),
   },
 
   // Thermostats (5)
@@ -126,6 +153,7 @@ export const products: Product[] = [
     category: 'Thermostats',
     manufacturer: 'ecobee',
     specs: { connectivity: 'Wi-Fi', sensors: 'Included' },
+    imageUrl: IMG('1545259741-2ea3ebf61fa3'),
   },
   {
     id: 'p012',
@@ -137,6 +165,7 @@ export const products: Product[] = [
     category: 'Thermostats',
     manufacturer: 'Nest',
     specs: { connectivity: 'Wi-Fi, Matter' },
+    imageUrl: IMG('1545259742-b4fd8fea67e4'),
   },
   {
     id: 'p013',
@@ -148,6 +177,7 @@ export const products: Product[] = [
     category: 'Thermostats',
     manufacturer: 'Honeywell',
     specs: { connectivity: 'Wi-Fi', sensors: 'Multi-room' },
+    imageUrl: IMG('1619140099965-06d74aaf51fa'),
   },
   {
     id: 'p014',
@@ -159,6 +189,7 @@ export const products: Product[] = [
     category: 'Thermostats',
     manufacturer: 'White-Rodgers',
     specs: { programmable: '5-1-1' },
+    imageUrl: IMG('1655194828703-2ff18a2a9759'),
   },
   {
     id: 'p015',
@@ -170,6 +201,7 @@ export const products: Product[] = [
     category: 'Thermostats',
     manufacturer: 'Lux',
     specs: { programmable: '7-day' },
+    imageUrl: IMG('1515974256630-babc85765b1d'),
   },
 
   // Motors (5)
@@ -183,6 +215,7 @@ export const products: Product[] = [
     category: 'Motors',
     manufacturer: 'Fasco',
     specs: { horsepower: '0.5', type: 'ECM' },
+    imageUrl: IMG('1563456020111-f02d832ae94c'),
   },
   {
     id: 'p017',
@@ -194,6 +227,7 @@ export const products: Product[] = [
     category: 'Motors',
     manufacturer: 'A.O. Smith',
     specs: { horsepower: '0.33', type: 'PSC' },
+    imageUrl: IMG('1772588063102-eed5af095b9e'),
   },
   {
     id: 'p018',
@@ -205,6 +239,7 @@ export const products: Product[] = [
     category: 'Motors',
     manufacturer: 'Mars',
     specs: { horsepower: '0.25', voltage: '230' },
+    imageUrl: IMG('1692719094491-2746e82a8595'),
   },
   {
     id: 'p019',
@@ -216,6 +251,7 @@ export const products: Product[] = [
     category: 'Motors',
     manufacturer: 'Fasco',
     specs: { speed: '3200 RPM' },
+    imageUrl: IMG('1555941911-2c0c77a44ea4'),
   },
   {
     id: 'p020',
@@ -227,6 +263,7 @@ export const products: Product[] = [
     category: 'Motors',
     manufacturer: 'Century',
     specs: { horsepower: '1', drive: 'Belt' },
+    imageUrl: IMG('1596877454778-9103606a5349'),
   },
 
   // Controls (5)
@@ -240,6 +277,7 @@ export const products: Product[] = [
     category: 'Controls',
     manufacturer: 'Honeywell',
     specs: { type: 'Furnace control' },
+    imageUrl: IMG('1562408590-e32931084e23'),
   },
   {
     id: 'p022',
@@ -251,6 +289,7 @@ export const products: Product[] = [
     category: 'Controls',
     manufacturer: 'Carrier',
     specs: { type: 'Furnace control' },
+    imageUrl: IMG('1592659762303-90081d34b277'),
   },
   {
     id: 'p023',
@@ -262,6 +301,7 @@ export const products: Product[] = [
     category: 'Controls',
     manufacturer: 'Mars',
     specs: { amperage: '40A', voltage: '24V coil' },
+    imageUrl: IMG('1580584126903-c17d41830450'),
   },
   {
     id: 'p024',
@@ -273,6 +313,7 @@ export const products: Product[] = [
     category: 'Controls',
     manufacturer: 'GE',
     specs: { capacitance: '45+5 MFD', voltage: '440V' },
+    imageUrl: IMG('1518770660439-4636190af475'),
   },
   {
     id: 'p025',
@@ -284,6 +325,7 @@ export const products: Product[] = [
     category: 'Controls',
     manufacturer: 'White-Rodgers',
     specs: { type: 'Furnace control' },
+    imageUrl: IMG('1515630278258-407f66498911'),
   },
 ];
 

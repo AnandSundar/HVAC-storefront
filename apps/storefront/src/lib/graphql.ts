@@ -42,6 +42,7 @@ const PRODUCTS_QUERY = gql`
       category
       manufacturer
       specs
+      imageUrl
     }
   }
 `;
@@ -58,6 +59,7 @@ const PRODUCT_BY_SKU_QUERY = gql`
       category
       manufacturer
       specs
+      imageUrl
     }
   }
 `;

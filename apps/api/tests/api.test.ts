@@ -88,6 +88,51 @@ describe('query products', () => {
     expect(parsed.data.products[0]?.sku).toBe('FURN-001');
   });
 
+  it('exposes imageUrl on seeded products', async () => {
+    // Every fixture in packages/shared-data/src/products.ts has an imageUrl
+    // pointing at images.unsplash.com. The GraphQL Product type must surface
+    // it so the storefront can render real product photos.
+    const { body } = await graphql({
+      query: '{ products { sku imageUrl } }',
+    });
+    const parsed = body as { data: { products: Array<{ sku: string; imageUrl: string | null }> } };
+    expect(parsed.data.products).toHaveLength(25);
+    for (const product of parsed.data.products) {
+      expect(product.imageUrl).toBeTruthy();
+      expect(product.imageUrl).toMatch(/^https:\/\/images\.unsplash\.com\/photo-/);
+    }
+  });
+
+  it('every imageUrl returns a live 2xx response', async () => {
+    // Regression guard: a hand-curated Unsplash photo ID can be silently
+    // removed by Unsplash, returning 404 with no compile-time signal. Before
+    // shipping, every imageURL must resolve so the storefront never shows a
+    // broken thumbnail.
+    //
+    // We mark this test `it.skip`able via IMAGE_REGRESSION=skip so a flaky
+    // upstream (Unsplash 503, network blip) doesn't fail local CI when the
+    // fixture data is otherwise correct.
+    if (process.env.IMAGE_REGRESSION === 'skip') return;
+
+    const { body } = await graphql({
+      query: '{ products { sku imageUrl } }',
+    });
+    const parsed = body as { data: { products: Array<{ sku: string; imageUrl: string }> } };
+
+    const broken: string[] = [];
+    await Promise.all(
+      parsed.data.products.map(async (product) => {
+        try {
+          const res = await fetch(product.imageUrl, { method: 'HEAD' });
+          if (!res.ok) broken.push(`${product.sku} -> ${res.status} ${product.imageUrl}`);
+        } catch (err) {
+          broken.push(`${product.sku} -> network error: ${(err as Error).message}`);
+        }
+      }),
+    );
+    expect(broken, `broken imageUrl(s):\n${broken.join('\n')}`).toEqual([]);
+  });
+
   it('filters by category', async () => {
     const { status, body } = await graphql({
       query: '{ products(category: "Filters") { sku category } }',
@@ -175,5 +220,56 @@ describe('mutation createProduct', () => {
     expect(parsed.data.createProduct.price).toBe(9.99);
     expect(parsed.data.createProduct.category).toBe('Filters');
     expect(productCount()).toBe(before + 1);
+  });
+
+  it('creates a product with an imageUrl when supplied', async () => {
+    const before = productCount();
+    const imageUrl = 'https://images.unsplash.com/photo-123?w=800&h=600&fit=crop';
+    const { status, body } = await graphql(
+      {
+        query: `mutation CreateWithImage($input: CreateProductInput!) {
+          createProduct(input: $input) { sku imageUrl }
+        }`,
+        variables: {
+          input: {
+            sku: 'TEST-IMG-001',
+            name: 'With Image',
+            description: 'd',
+            price: 1.0,
+            stock: 1,
+            category: 'Filters',
+            manufacturer: 'm',
+            imageUrl,
+          },
+        },
+      },
+      { [ADMIN_TOKEN_HEADER]: ADMIN_TOKEN },
+    );
+    expect(status).toBe(200);
+    const parsed = body as {
+      data?: { createProduct: { sku: string; imageUrl: string | null } };
+      errors?: unknown;
+    };
+    expect(parsed.errors).toBeUndefined();
+    expect(parsed.data?.createProduct.sku).toBe('TEST-IMG-001');
+    expect(parsed.data?.createProduct.imageUrl).toBe(imageUrl);
+    expect(productCount()).toBe(before + 1);
+  });
+
+  it('rejects an invalid imageUrl', async () => {
+    const { body } = await graphql(
+      {
+        query: `mutation {
+          createProduct(input: {
+            sku: "TEST-BAD-IMG", name: "x", description: "d", price: 1.0, stock: 1,
+            category: "Filters", manufacturer: "m", imageUrl: "not-a-url"
+          }) { sku }
+        }`,
+      },
+      { [ADMIN_TOKEN_HEADER]: ADMIN_TOKEN },
+    );
+    const parsed = body as { errors?: Array<{ message: string }> };
+    expect(parsed.errors).toBeDefined();
+    expect(parsed.errors?.[0]?.message).toMatch(/imageUrl/);
   });
 });

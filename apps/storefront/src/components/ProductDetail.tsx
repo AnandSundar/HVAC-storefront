@@ -1,5 +1,6 @@
 import type { Product } from '@hvac-portfolio/shared-data/types';
 import { Package, ArrowLeft } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -22,8 +23,10 @@ function formatPrice(value: number): string {
 }
 
 /**
- * Full product detail view: image placeholder, full description, specs list,
- * stock indicator, price, and AddToCartButton.
+ * Full product detail view. Renders the product photo via next/image when
+ * available, falls back to a placeholder icon when imageUrl is missing. Also
+ * shows full description, specs list, stock indicator, price, and the
+ * AddToCartButton.
  */
 export function ProductDetail({
   product,
@@ -35,8 +38,19 @@ export function ProductDetail({
 
   return (
     <article className={cn('grid gap-8 md:grid-cols-2', className)}>
-      <div className="flex aspect-square items-center justify-center rounded-lg border border-border bg-secondary/40 text-muted-foreground">
-        <Package className="h-24 w-24" aria-hidden="true" />
+      <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-lg border border-border bg-secondary/40 text-muted-foreground">
+        {product.imageUrl ? (
+          <Image
+            src={product.imageUrl}
+            alt={product.name}
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            priority
+            className="object-cover"
+          />
+        ) : (
+          <Package className="h-24 w-24" aria-hidden="true" />
+        )}
       </div>
 
       <div className="flex flex-col gap-4">

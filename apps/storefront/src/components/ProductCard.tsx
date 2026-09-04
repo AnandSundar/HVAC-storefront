@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Package } from 'lucide-react';
@@ -21,8 +22,9 @@ function formatPrice(value: number): string {
 }
 
 /**
- * Compact product summary tile. Image placeholder, name, category badge,
- * formatted price, and stock indicator. Links to the detail page.
+ * Compact product summary tile. Renders the product photo via next/image when
+ * `product.imageUrl` is present, otherwise falls back to the placeholder icon.
+ * Includes name, category badge, formatted price, and stock indicator.
  */
 export function ProductCard({
   product,
@@ -43,8 +45,18 @@ export function ProductCard({
         className="flex h-full flex-col outline-none focus-visible:ring-2 focus-visible:ring-ring"
         aria-label={`${product.name} – ${formatPrice(product.price)}`}
       >
-        <div className="flex h-32 items-center justify-center bg-secondary/40 text-muted-foreground">
-          <Package className="h-10 w-10" aria-hidden="true" />
+        <div className="relative flex h-32 items-center justify-center overflow-hidden bg-secondary/40 text-muted-foreground">
+          {product.imageUrl ? (
+            <Image
+              src={product.imageUrl}
+              alt={product.name}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <Package className="h-10 w-10" aria-hidden="true" />
+          )}
         </div>
 
         <div className="flex flex-1 flex-col gap-2 p-4">
