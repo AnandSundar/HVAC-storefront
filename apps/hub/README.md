@@ -98,6 +98,8 @@ The project detail route uses `generateStaticParams` for the four known slugs, s
 | `NEXT_PUBLIC_STOREFRONT_URL` | `https://hvac-fullstack-portfolio-storefront.vercel.app` | Live storefront link on Storefront card |
 | `NEXT_PUBLIC_API_URL` | `https://hvac-fullstack-portfolio-api.onrender.com` | Live GraphQL endpoint on Node API card |
 | `NEXT_PUBLIC_PHP_REPO_URL` | `https://github.com/morninganand/hvac-fullstack-portfolio/tree/main/apps/php-api` | GitHub repo link on PHP API card |
+| `HUB_ADMIN_TOKEN` | `test-secret` (dev only) | Shared admin token for `/admin/*` sign-in. Required in production (the hub fails closed — see `HUB_ADMIN_TOKEN` in `.env.example`). |
+| `PHP_API_URL` | `http://localhost:8000` | Base URL the admin UI calls. Must be `https://` in production. |
 
 Set these in Vercel project settings (or `.env.local` for local dev) after the corresponding apps deploy.
 
@@ -139,3 +141,17 @@ Vercel will run `pnpm install` (root) then `pnpm --filter hub build` via Turbore
 - `apps/hub/public/favicon.ico` is a tiny placeholder 16x16 ICO. Replace it with a real favicon before going public.
 - No authentication, no payment processing (KTD-7 in the plan). All project URLs are placeholders until U3–U5 deploy.
 - Mobile responsiveness via Tailwind mobile-first breakpoints (`sm:`, `md:`, `lg:`). Verified at 375px wide (iPhone SE viewport).
+
+---
+
+## Admin demo
+
+The `/admin/*` routes demonstrate the back-office side of the system — a
+non-technical user can list, create, and edit HVAC parts through the browser.
+
+Sign-in token for local dev: **`test-secret`** (the dev fallback when
+`HUB_ADMIN_TOKEN` is unset). In production, set `HUB_ADMIN_TOKEN` to a strong
+secret — the admin module refuses to load otherwise.
+
+The token is held in an httpOnly cookie scoped to `/admin/*`, so it never
+travels with storefront requests.
