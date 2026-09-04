@@ -1,0 +1,7 @@
+{
+  "buildCommand": "pnpm turbo run build --filter=storefront",
+  "devCommand": "pnpm turbo run dev --filter=storefront",
+  "installCommand": "pnpm install",
+  "framework": "nextjs",
+  "regions": ["iad1"]
+}
