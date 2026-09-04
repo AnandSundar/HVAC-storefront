@@ -1,21 +1,33 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { getAdminToken } from '@/lib/admin-token';
+import { listParts } from '@/lib/parts';
+import { PartsTable } from '@/components/admin/PartsTable';
+import { EmptyState } from '@/components/admin/EmptyState';
+
+interface AdminInventoryPageProps {
+  readonly searchParams: Promise<{ readonly created?: string; readonly updated?: string }>;
+}
 
 /**
- * Inventory landing page. U2 establishes the auth gate (the only reason this
- * page exists at this point — U3 expands the body to render the parts list
- * with `<PartsTable>` and the success banners for `?created=` / `?updated=`).
+ * Auth-gated parts list page. Reads `?created=<sku>` / `?updated=<sku>`
+ * (set by `submitPartAction` after a successful create/edit) and renders a
+ * success banner above the table.
  *
- * The gate is per-page rather than in `admin/layout.tsx` to avoid the
- * documented layout-vs-sign-in redirect loop. See the admin UI plan, KTD-3.
+ * Throws from `listParts` propagate to the route's `error.tsx` boundary; the
+ * empty-result case renders the `<EmptyState>` instead.
  */
-export default async function AdminInventoryPage(): Promise<React.ReactElement> {
+export default async function AdminInventoryPage({
+  searchParams,
+}: AdminInventoryPageProps): Promise<React.ReactElement> {
   const token = await getAdminToken();
   if (token === null) {
     redirect('/admin/sign-in?reason=expired');
   }
+
+  const parts = await listParts(token);
+  const { created, updated } = await searchParams;
 
   return (
     <section className="container mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10">
@@ -37,10 +49,34 @@ export default async function AdminInventoryPage(): Promise<React.ReactElement> 
         </Link>
       </header>
 
-      <div className="rounded-md border border-dashed border-border bg-background p-6 text-sm text-muted-foreground">
-        Parts list placeholder. The table and the create / edit forms ship in
-        U3 and U4.
-      </div>
+      {created !== undefined ? (
+        <SuccessBanner sku={created} kind="created" />
+      ) : null}
+      {updated !== undefined ? (
+        <SuccessBanner sku={updated} kind="updated" />
+      ) : null}
+
+      {parts.length === 0 ? <EmptyState /> : <PartsTable parts={parts} />}
     </section>
+  );
+}
+
+interface SuccessBannerProps {
+  readonly sku: string;
+  readonly kind: 'created' | 'updated';
+}
+
+function SuccessBanner({ sku, kind }: SuccessBannerProps): React.ReactElement {
+  const verb = kind === 'created' ? 'created' : 'updated';
+  return (
+    <div
+      role="status"
+      className="flex items-center gap-3 rounded-md border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-100"
+    >
+      <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+      <p>
+        Part <span className="font-mono font-medium">{sku}</span> {verb}.
+      </p>
+    </div>
   );
 }
