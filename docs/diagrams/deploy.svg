@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 620" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <marker id="arr-cron" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#ea580c"/>
+    </marker>
+    <style>
+      .gh-box { fill: #24292f; stroke: #24292f; stroke-width: 1.5; rx: 8; ry: 8; }
+      .vercel-box { fill: #ffffff; stroke: #000000; stroke-width: 1.5; rx: 8; ry: 8; }
+      .render-box { fill: #ffffff; stroke: #046307; stroke-width: 1.5; rx: 8; ry: 8; }
+      .cron-box { fill: #fff7ed; stroke: #ea580c; stroke-width: 1.5; rx: 8; ry: 8; }
+      .user-box { fill: #eff6ff; stroke: #1e40af; stroke-width: 1.5; rx: 8; ry: 8; }
+      .label-light { font-size: 16px; font-weight: 600; fill: #ffffff; }
+      .label-dark { font-size: 14px; font-weight: 600; fill: #0f172a; }
+      .label-sub-light { font-size: 11px; fill: #cbd5e1; }
+      .label-sub { font-size: 11px; fill: #475569; }
+      .label-url { font-size: 11px; fill: #1e40af; font-family: 'Menlo', 'Consolas', monospace; }
+      .label-url-green { font-size: 11px; fill: #046307; font-family: 'Menlo', 'Consolas', monospace; }
+      .label-cron { font-size: 11px; fill: #9a3412; font-family: 'Menlo', 'Consolas', monospace; }
+      .edge-label { font-size: 11px; fill: #475569; }
+      .edge-cron { font-size: 11px; fill: #9a3412; font-style: italic; }
+    </style>
+  </defs>
+
+  <rect width="960" height="620" fill="#ffffff"/>
+
+  <text x="40" y="40" font-size="16" font-weight="600" fill="#0f172a">Deployment topology — GitHub → Vercel + Render, cron pre-warm</text>
+  <text x="40" y="58" font-size="11" font-style="italic" fill="#64748b">What runs where, and how the recruiter finds each app.</text>
+
+  <!-- Row 1: Recruiter -->
+  <rect x="40" y="90" width="880" height="80" class="user-box"/>
+  <text x="60" y="115" class="label-dark">Recruiter / Hiring manager</text>
+  <text x="60" y="135" class="label-sub">clicks a link from the email → hub → storefront → live API</text>
+  <text x="60" y="155" class="label-sub">All four apps reachable without login. PHP API can be one-click-deployed to their own Render account.</text>
+
+  <!-- Row 2: GitHub -->
+  <rect x="40" y="200" width="880" height="120" class="gh-box"/>
+  <text x="60" y="225" class="label-light">github.com/morninganand/hvac-fullstack-portfolio</text>
+  <text x="60" y="245" class="label-sub-light">Single repo, five apps, monorepo via pnpm workspaces</text>
+
+  <rect x="60" y="260" width="170" height="50" fill="#0f172a" stroke="#475569" rx="4"/>
+  <text x="145" y="280" font-size="11" fill="#ffffff" text-anchor="middle">apps/hub</text>
+  <text x="145" y="298" font-size="10" fill="#94a3b8" text-anchor="middle">Next.js</text>
+
+  <rect x="240" y="260" width="170" height="50" fill="#0f172a" stroke="#475569" rx="4"/>
+  <text x="325" y="280" font-size="11" fill="#ffffff" text-anchor="middle">apps/storefront</text>
+  <text x="325" y="298" font-size="10" fill="#94a3b8" text-anchor="middle">Next.js</text>
+
+  <rect x="420" y="260" width="170" height="50" fill="#0f172a" stroke="#475569" rx="4"/>
+  <text x="505" y="280" font-size="11" fill="#ffffff" text-anchor="middle">apps/api</text>
+  <text x="505" y="298" font-size="10" fill="#94a3b8" text-anchor="middle">Node 22 + GraphQL</text>
+
+  <rect x="600" y="260" width="170" height="50" fill="#0f172a" stroke="#475569" rx="4"/>
+  <text x="685" y="280" font-size="11" fill="#ffffff" text-anchor="middle">apps/php-api</text>
+  <text x="685" y="298" font-size="10" fill="#94a3b8" text-anchor="middle">Laravel 11</text>
+
+  <rect x="780" y="260" width="120" height="50" fill="#0f172a" stroke="#ea580c" rx="4"/>
+  <text x="840" y="280" font-size="11" fill="#ffffff" text-anchor="middle">.github/</text>
+  <text x="840" y="298" font-size="10" fill="#fdba74" text-anchor="middle">workflows</text>
+
+  <!-- Row 3: Deploy targets -->
+  <!-- Vercel -->
+  <rect x="40" y="360" width="380" height="100" class="vercel-box"/>
+  <text x="60" y="385" class="label-dark">▲ Vercel</text>
+  <text x="60" y="405" class="label-sub">Auto-deploy on push to main. Preview URLs per PR.</text>
+
+  <text x="60" y="430" class="label-url">hub  → hvac-fullstack-portfolio-hub.vercel.app</text>
+  <text x="60" y="448" class="label-url">store → hvac-fullstack-portfolio-storefront.vercel.app</text>
+
+  <!-- Render Node -->
+  <rect x="440" y="360" width="220" height="100" class="render-box"/>
+  <text x="460" y="385" class="label-dark">⏺ Render (Docker)</text>
+  <text x="460" y="405" class="label-sub">apps/api Dockerfile</text>
+  <text x="460" y="430" class="label-url-green">api → ...onrender.com/graphql</text>
+  <text x="460" y="448" class="label-sub">ADMIN_TOKEN env var set</text>
+
+  <!-- Render PHP one-click -->
+  <rect x="680" y="360" width="240" height="100" class="render-box"/>
+  <text x="700" y="385" class="label-dark">⏺ Render one-click</text>
+  <text x="700" y="405" class="label-sub">apps/php-api render.yaml button</text>
+  <text x="700" y="430" class="label-sub">Recruiter deploys own instance</text>
+  <text x="700" y="448" class="label-sub">no shared auth needed</text>
+
+  <!-- Row 4: Cron pre-warm -->
+  <rect x="40" y="490" width="880" height="100" class="cron-box"/>
+  <text x="60" y="515" class="label-dark">⏰ GitHub Actions — Render pre-warm cron</text>
+  <text x="60" y="535" class="label-sub">Every 10 minutes during the Sept 7–8 interview window (13:00–23:59 UTC)</text>
+  <text x="60" y="555" class="label-cron">curl https://hvac-fullstack-portfolio-api.onrender.com/healthz</text>
+  <text x="60" y="572" class="edge-cron">→ keeps the free-tier service awake so the live demo never hits a cold start</text>
+
+  <!-- Arrows from GitHub to deploy targets -->
+  <line x1="145" y1="310" x2="145" y2="360" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="325" y1="310" x2="325" y2="360" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="505" y1="310" x2="505" y2="360" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="685" y1="310" x2="800" y2="360" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="155" y="335" class="edge-label">deploy</text>
+  <text x="335" y="335" class="edge-label">deploy</text>
+  <text x="515" y="335" class="edge-label">render.yaml</text>
+  <text x="700" y="335" class="edge-label">one-click</text>
+
+  <!-- Recruiter to GitHub -->
+  <line x1="480" y1="170" x2="480" y2="200" stroke="#1e40af" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="495" y="188" class="edge-label">clones / browses</text>
+
+  <!-- Recruiter to Vercel (live URLs) -->
+  <path d="M 200 130 Q 200 340 200 360" stroke="#1e40af" stroke-width="1.2" stroke-dasharray="4 4" fill="none" marker-end="url(#arr)"/>
+  <text x="210" y="350" class="edge-label">live URLs</text>
+
+  <!-- Cron to Render -->
+  <path d="M 840 490 Q 840 460 600 460" stroke="#ea580c" stroke-width="1.5" stroke-dasharray="4 4" fill="none" marker-end="url(#arr-cron)"/>
+  <text x="700" y="475" class="edge-cron">ping every 10 min</text>
+</svg>

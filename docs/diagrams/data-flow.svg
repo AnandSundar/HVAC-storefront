@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 700" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1e293b"/>
+    </marker>
+    <marker id="arr-async" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0284c7"/>
+    </marker>
+    <style>
+      .actor { fill: #ffffff; stroke: #1e293b; stroke-width: 1.5; }
+      .actor-title { font-size: 13px; font-weight: 600; fill: #0f172a; text-anchor: middle; }
+      .actor-sub { font-size: 10px; fill: #64748b; text-anchor: middle; }
+      .lifeline { stroke: #94a3b8; stroke-width: 1; stroke-dasharray: 4 4; }
+      .solid-arrow { stroke: #1e293b; stroke-width: 1.5; fill: none; }
+      .async-arrow { stroke: #0284c7; stroke-width: 1.5; fill: none; stroke-dasharray: 6 3; }
+      .return-arrow { stroke: #16a34a; stroke-width: 1.5; fill: none; }
+      .step-num { font-size: 10px; font-weight: 600; fill: #1e40af; }
+      .step-label { font-size: 12px; fill: #0f172a; }
+      .step-meta { font-size: 10px; fill: #64748b; font-style: italic; }
+      .section-title { font-size: 14px; font-weight: 600; fill: #0f172a; }
+    </style>
+  </defs>
+
+  <rect width="960" height="700" fill="#ffffff"/>
+
+  <text x="40" y="40" class="section-title">Data flow — user clicks "Add to cart" on the storefront</text>
+  <text x="40" y="58" class="step-meta">Step-by-step from browser click to localStorage write, with the GraphQL query and response shown.</text>
+
+  <!-- Section A: Product page load (read path) -->
+  <text x="40" y="90" class="section-title" font-size="12">A. Page load — server-side fetch (RSC)</text>
+
+  <!-- Actors -->
+  <rect x="60" y="110" width="120" height="40" class="actor" rx="4" ry="4"/>
+  <text x="120" y="128" class="actor-title">Browser</text>
+  <text x="120" y="142" class="actor-sub">user visits /products</text>
+
+  <rect x="240" y="110" width="120" height="40" class="actor" rx="4" ry="4"/>
+  <text x="300" y="128" class="actor-title">Storefront</text>
+  <text x="300" y="142" class="actor-sub">Next.js RSC</text>
+
+  <rect x="420" y="110" width="120" height="40" class="actor" rx="4" ry="4"/>
+  <text x="480" y="128" class="actor-title">graphql-request</text>
+  <text x="480" y="142" class="actor-sub">fetcher</text>
+
+  <rect x="600" y="110" width="120" height="40" class="actor" rx="4" ry="4"/>
+  <text x="660" y="128" class="actor-title">Node API</text>
+  <text x="660" y="142" class="actor-sub">graphql-yoga</text>
+
+  <rect x="780" y="110" width="120" height="40" class="actor" rx="4" ry="4"/>
+  <text x="840" y="128" class="actor-title">Fallback</text>
+  <text x="840" y="142" class="actor-sub">static fixtures</text>
+
+  <!-- Lifelines -->
+  <line x1="120" y1="155" x2="120" y2="220" class="lifeline"/>
+  <line x1="300" y1="155" x2="300" y2="220" class="lifeline"/>
+  <line x1="480" y1="155" x2="480" y2="220" class="lifeline"/>
+  <line x1="660" y1="155" x2="660" y2="220" class="lifeline"/>
+  <line x1="840" y1="155" x2="840" y2="220" class="lifeline"/>
+
+  <!-- A1: Browser requests page -->
+  <text x="130" y="172" class="step-num">A1</text>
+  <line x1="120" y1="175" x2="295" y2="175" class="solid-arrow" marker-end="url(#arr)"/>
+  <text x="135" y="170" class="step-label">GET /products</text>
+
+  <!-- A2: Storefront server fetches via graphql-request -->
+  <text x="310" y="192" class="step-num">A2</text>
+  <line x1="300" y1="195" x2="475" y2="195" class="solid-arrow" marker-end="url(#arr)"/>
+  <text x="325" y="190" class="step-label">query products { id sku name ... }</text>
+
+  <!-- A3: graphql-request POSTs to API -->
+  <text x="490" y="212" class="step-num">A3</text>
+  <line x1="480" y1="215" x2="655" y2="215" class="solid-arrow" marker-end="url(#arr)"/>
+  <text x="505" y="210" class="step-label">POST /graphql</text>
+
+  <!-- Section B: Add-to-cart (write path) -->
+  <text x="40" y="250" class="section-title" font-size="12">B. Add-to-cart click (client side)</text>
+
+  <!-- Actors for B -->
+  <rect x="60" y="270" width="120" height="40" class="actor" rx="4" ry="4"/>
+  <text x="120" y="288" class="actor-title">Browser</text>
+  <text x="120" y="302" class="actor-sub">clicks button</text>
+
+  <rect x="240" y="270" width="120" height="40" class="actor" rx="4" ry="4"/>
+  <text x="300" y="288" class="actor-title">Zustand</text>
+  <text x="300" y="302" class="actor-sub">cart store</text>
+
+  <rect x="420" y="270" width="120" height="40" class="actor" rx="4" ry="4"/>
+  <text x="480" y="288" class="actor-title">localStorage</text>
+  <text x="480" y="302" class="actor-sub">persist middleware</text>
+
+  <line x1="120" y1="315" x2="120" y2="450" class="lifeline"/>
+  <line x1="300" y1="315" x2="300" y2="450" class="lifeline"/>
+  <line x1="480" y1="315" x2="480" y2="450" class="lifeline"/>
+
+  <!-- B1 -->
+  <text x="130" y="332" class="step-num">B1</text>
+  <line x1="120" y1="335" x2="295" y2="335" class="solid-arrow" marker-end="url(#arr)"/>
+  <text x="135" y="330" class="step-label">click "Add to cart" on ProductCard</text>
+
+  <!-- B2 -->
+  <text x="310" y="352" class="step-num">B2</text>
+  <line x1="300" y1="355" x2="475" y2="355" class="solid-arrow" marker-end="url(#arr)"/>
+  <text x="325" y="350" class="step-label">addItem({ sku: "FURN-001", quantity: 1 })</text>
+
+  <!-- B3: persist write -->
+  <text x="490" y="372" class="step-num">B3</text>
+  <line x1="300" y1="375" x2="475" y2="375" class="async-arrow" marker-end="url(#arr-async)"/>
+  <text x="325" y="370" class="step-label">persist writes JSON to localStorage key 'hvac-cart'</text>
+
+  <!-- B4: Zustand notifies subscribers -->
+  <text x="200" y="397" class="step-num">B4</text>
+  <line x1="295" y1="395" x2="125" y2="395" class="return-arrow" marker-end="url(#arr)"/>
+  <text x="155" y="390" class="step-label">store updates → CartSummary re-renders</text>
+
+  <!-- Section C: Checkout (mock) -->
+  <text x="40" y="480" class="section-title" font-size="12">C. Checkout — mock flow (no payment processor)</text>
+
+  <rect x="60" y="500" width="120" height="40" class="actor" rx="4" ry="4"/>
+  <text x="120" y="518" class="actor-title">Browser</text>
+  <text x="120" y="532" class="actor-sub">/checkout</text>
+
+  <rect x="240" y="500" width="120" height="40" class="actor" rx="4" ry="4"/>
+  <text x="300" y="518" class="actor-title">Storefront</text>
+  <text x="300" y="532" class="actor-sub">checkout page</text>
+
+  <line x1="120" y1="545" x2="120" y2="660" class="lifeline"/>
+  <line x1="300" y1="545" x2="300" y2="660" class="lifeline"/>
+
+  <text x="130" y="562" class="step-num">C1</text>
+  <line x1="120" y1="565" x2="295" y2="565" class="solid-arrow" marker-end="url(#arr)"/>
+  <text x="135" y="560" class="step-label">POST form data to checkout page</text>
+
+  <text x="310" y="582" class="step-num">C2</text>
+  <line x1="300" y1="585" x2="475" y2="585" class="solid-arrow" marker-end="url(#arr)"/>
+
+  <text x="155" y="605" class="step-num">C3</text>
+  <line x1="300" y1="608" x2="120" y2="608" class="return-arrow" marker-end="url(#arr)"/>
+  <text x="160" y="603" class="step-label">redirect to /checkout/success after 1.5s simulated delay</text>
+
+  <text x="40" y="690" class="step-meta">Note: no real payment processor — checkout is a UI mock with a single redirect, demonstrating the flow without integrating Stripe/PayPal.</text>
+</svg>
