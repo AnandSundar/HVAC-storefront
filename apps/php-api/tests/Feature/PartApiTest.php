@@ -236,4 +236,85 @@ class PartApiTest extends TestCase
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['part_number']);
     }
+
+    public function test_destroy_without_admin_token_returns_403(): void
+    {
+        // Clear the admin token (phpunit.xml sets it by default).
+        putenv('ADMIN_TOKEN');
+        $part = Part::first();
+
+        $response = $this->deleteJson("/api/parts/{$part->part_number}");
+
+        $response->assertStatus(403);
+        $response->assertJson(['error' => 'Admin authentication required']);
+        // The row must remain — 403 must not delete.
+        $this->assertDatabaseHas('parts', ['part_number' => $part->part_number]);
+    }
+
+    public function test_destroy_with_unset_admin_token_rejects_even_correct_guess(): void
+    {
+        // ADMIN_TOKEN must be unset across ALL env sources — putenv() alone is not
+        // enough because Laravel's env() helper reads from the Dotenv repository
+        // which also consults $_ENV and $_SERVER, and phpunit.xml populates
+        // $_SERVER via its `<env>` directive. Clearing all three sources makes the
+        // test exercise the true fail-closed path: correct header + empty env
+        // must still 403.
+        putenv('ADMIN_TOKEN');
+        unset($_ENV['ADMIN_TOKEN'], $_SERVER['ADMIN_TOKEN']);
+        $part = Part::first();
+
+        $response = $this->deleteJson("/api/parts/{$part->part_number}", [], [
+            'X-Admin-Token' => 'test-secret',
+        ]);
+
+        $response->assertStatus(403);
+        $this->assertDatabaseHas('parts', ['part_number' => $part->part_number]);
+    }
+
+    public function test_destroy_with_valid_token_returns_204_and_deletes(): void
+    {
+        // phpunit.xml sets ADMIN_TOKEN=test-secret
+        $part = Part::first();
+
+        $response = $this->deleteJson("/api/parts/{$part->part_number}", [], [
+            'X-Admin-Token' => 'test-secret',
+        ]);
+
+        $response->assertNoContent();
+        $this->assertDatabaseMissing('parts', ['part_number' => $part->part_number]);
+    }
+
+    public function test_destroy_on_missing_sku_returns_404(): void
+    {
+        $response = $this->deleteJson('/api/parts/UNKNOWN-999', [], [
+            'X-Admin-Token' => 'test-secret',
+        ]);
+
+        $response->assertNotFound();
+    }
+
+    public function test_destroy_options_preflight_advertises_delete_method(): void
+    {
+        // HandleCors middleware intercepts the OPTIONS preflight before route
+        // resolution. X-Admin-Token is not required for preflight (it is browser-
+        // initiated), but the request must carry Origin + Access-Control-Request-*
+        // headers for the middleware to respond with a CORS allow-list.
+        //
+        // Note: fruitcake/php-cors handlePreflightRequest() returns 204 No Content
+        // (see vendor/fruitcake/php-cors/src/CorsService.php:148) — not 200. 204
+        // is the spec-compliant response per RFC 7230 §3.3.2 for preflight.
+        $response = $this->call('OPTIONS', '/api/parts/PHP-001', [], [], [], [
+            'HTTP_ORIGIN' => 'http://localhost:3000',
+            'HTTP_ACCESS_CONTROL_REQUEST_METHOD' => 'DELETE',
+            'HTTP_ACCESS_CONTROL_REQUEST_HEADERS' => 'x-admin-token,content-type',
+        ]);
+
+        $response->assertNoContent();
+        $allowedMethods = $response->headers->get('Access-Control-Allow-Methods');
+        $this->assertNotNull(
+            $allowedMethods,
+            'Access-Control-Allow-Methods header missing from preflight response',
+        );
+        $this->assertStringContainsString('DELETE', $allowedMethods);
+    }
 }

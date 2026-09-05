@@ -92,6 +92,27 @@ class PartController
     }
 
     /**
+     * DELETE /api/parts/{part}
+     * Delete a part. Same admin-token gate as store/update.
+     * Returns 204 No Content on success (idiomatic REST for DELETE).
+     * 404 falls through the route-model binding (firstOrFail) via the bootstrap
+     * exception handler, which renders JSON because the path matches `api/*`.
+     */
+    public function destroy(Request $request, Part $part): \Symfony\Component\HttpFoundation\Response
+    {
+        if (! $this->adminTokenIsValid($request)) {
+            return response()->json(
+                ['error' => 'Admin authentication required'],
+                403
+            );
+        }
+
+        $part->delete();
+
+        return response()->noContent();
+    }
+
+    /**
      * Fail-closed admin-token check.
      *
      * Returns true only when ALL of:

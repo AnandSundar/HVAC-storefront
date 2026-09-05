@@ -14,3 +14,4 @@ Route::get('parts/{part}', [PartController::class, 'show']);
 Route::post('parts', [PartController::class, 'store']);
 Route::patch('parts/{part}', [PartController::class, 'update']);
 Route::put('parts/{part}', [PartController::class, 'update']);
+Route::delete('parts/{part}', [PartController::class, 'destroy']);
