@@ -507,3 +507,196 @@ describe('submitPartAction – edit', () => {
     }
   });
 });
+
+describe('deletePart', () => {
+  it('attaches X-Admin-Token and DELETEs /api/parts/<sku> with method DELETE', async () => {
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      expect(String(url)).toBe('http://localhost:8000/api/parts/PHP-001');
+      expect(init?.method).toBe('DELETE');
+      const headers = init?.headers as Record<string, string> | undefined;
+      expect(headers?.['X-Admin-Token']).toBe(ADMIN_TOKEN);
+      // 204 No Content — empty body, status only.
+      return new Response(null, { status: 204, statusText: 'No Content' });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const { deletePart } = await import('../../src/lib/parts');
+    const result = await deletePart(ADMIN_TOKEN, 'PHP-001');
+    expect(result).toBeUndefined();
+  });
+
+  it('URL-encodes the SKU path segment (e.g. slash → %2F)', async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      expect(String(url)).toBe('http://localhost:8000/api/parts/PHP%2F001');
+      return new Response(null, { status: 204, statusText: 'No Content' });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const { deletePart } = await import('../../src/lib/parts');
+    const result = await deletePart(ADMIN_TOKEN, 'PHP/001');
+    expect(result).toBeUndefined();
+  });
+
+  it('throws PartsFetchError with status 404 when the part is missing', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse({ message: 'No query results for model [App\\Models\\Part] PHP-MISSING' }, 404)),
+    );
+    const { deletePart, PartsFetchError } = await import('../../src/lib/parts');
+    const err = await deletePart(ADMIN_TOKEN, 'PHP-MISSING').catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(PartsFetchError);
+    const fetchErr = err as InstanceType<typeof PartsFetchError>;
+    expect(fetchErr.status).toBe(404);
+    // Message names the SKU so the caller (PartForm) can present "Part <sku> not found".
+    expect(fetchErr.message).toMatch(/PHP-MISSING.*not found/);
+  });
+
+  it('propagates the upstream JSON `error` field on a 403', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse({ error: 'Admin authentication required' }, 403, 'Forbidden'),
+      ),
+    );
+    const { deletePart, PartsFetchError } = await import('../../src/lib/parts');
+    const err = await deletePart(ADMIN_TOKEN, 'PHP-001').catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(PartsFetchError);
+    const fetchErr = err as InstanceType<typeof PartsFetchError>;
+    expect(fetchErr.status).toBe(403);
+    expect(fetchErr.body).toEqual({ error: 'Admin authentication required' });
+  });
+
+  it('throws PartsFetchError with status 0 and "Request timeout" on AbortError', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, init?: RequestInit) => {
+        return new Promise((_, reject) => {
+          init?.signal?.addEventListener('abort', () => {
+            const err = new Error('aborted');
+            err.name = 'AbortError';
+            reject(err);
+          });
+        });
+      }),
+    );
+    const { deletePart, PartsFetchError } = await import('../../src/lib/parts');
+    const promise = deletePart(ADMIN_TOKEN, 'PHP-001').catch((e: unknown) => e);
+    await vi.advanceTimersByTimeAsync(5_001);
+    const err = await promise;
+    vi.useRealTimers();
+    expect(err).toBeInstanceOf(PartsFetchError);
+    const fetchErr = err as InstanceType<typeof PartsFetchError>;
+    expect(fetchErr.status).toBe(0);
+    expect(fetchErr.body).toEqual({ error: 'Request timeout' });
+  });
+
+  it('throws PartsFetchError with status 0 and "Network error" on a network failure', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new TypeError('Failed to fetch');
+      }),
+    );
+    const { deletePart, PartsFetchError } = await import('../../src/lib/parts');
+    const err = await deletePart(ADMIN_TOKEN, 'PHP-001').catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(PartsFetchError);
+    const fetchErr = err as InstanceType<typeof PartsFetchError>;
+    expect(fetchErr.status).toBe(0);
+    expect(fetchErr.body).toEqual({ error: 'Network error' });
+  });
+});
+
+describe('deletePartAction', () => {
+  it('returns {ok: true, redirectTo: ?deleted=<sku>} and revalidates /admin/inventory on 204', async () => {
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      expect(String(url)).toBe('http://localhost:8000/api/parts/PHP-001');
+      expect(init?.method).toBe('DELETE');
+      const headers = init?.headers as Record<string, string> | undefined;
+      expect(headers?.['X-Admin-Token']).toBe(ADMIN_TOKEN);
+      return new Response(null, { status: 204, statusText: 'No Content' });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const { revalidatePath } = await import('next/cache');
+    const { deletePartAction } = await import('../../src/lib/parts-actions');
+    const result = await deletePartAction(
+      'PHP-001',
+      ADMIN_TOKEN,
+      undefined,
+      new FormData(),
+    );
+    expect(result).toEqual({
+      ok: true,
+      redirectTo: '/admin/inventory?deleted=PHP-001',
+    });
+    expect(revalidatePath).toHaveBeenCalledTimes(1);
+    expect(revalidatePath).toHaveBeenCalledWith('/admin/inventory');
+  });
+
+  it('returns {ok: false, error: "Admin authentication required"} on 403', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse({ error: 'Admin authentication required' }, 403, 'Forbidden'),
+      ),
+    );
+    const { revalidatePath } = await import('next/cache');
+    const { deletePartAction } = await import('../../src/lib/parts-actions');
+    const result = await deletePartAction(
+      'PHP-001',
+      ADMIN_TOKEN,
+      undefined,
+      new FormData(),
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBe('Admin authentication required');
+      expect(result.fieldErrors).toEqual({});
+    }
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('returns {ok: false, error: "Part <sku> not found"} on 404', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse(
+          { message: 'No query results for model [App\\Models\\Part] PHP-001' },
+          404,
+          'Not Found',
+        ),
+      ),
+    );
+    const { deletePartAction } = await import('../../src/lib/parts-actions');
+    const result = await deletePartAction(
+      'PHP-001',
+      ADMIN_TOKEN,
+      undefined,
+      new FormData(),
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBe('Part PHP-001 not found');
+      expect(result.fieldErrors).toEqual({});
+    }
+  });
+
+  it('returns {ok: false, error: "Network error"} on fetch TypeError', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new TypeError('Failed to fetch');
+      }),
+    );
+    const { deletePartAction } = await import('../../src/lib/parts-actions');
+    const result = await deletePartAction(
+      'PHP-001',
+      ADMIN_TOKEN,
+      undefined,
+      new FormData(),
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBe('Network error');
+      expect(result.fieldErrors).toEqual({});
+    }
+  });
+});

@@ -237,6 +237,41 @@ export async function updatePart(
 }
 
 /**
+ * DELETE /api/parts/{part}
+ * Remove a part by SKU. Resolves on 204; throws PartsFetchError on any
+ * non-2xx (including 404 — same "Part <sku> not found" message shape as
+ * `getPart`, so the action's caller can present a uniform copy).
+ *
+ * No body to parse on success — Laravel returns 204 No Content for DELETE,
+ * which is the idiomatic REST response. The admin-token gate on the PHP
+ * side returns 403 with `{ error: 'Admin authentication required' }`; that
+ * body is parsed by `parseErrorBody` and surfaces verbatim via `body.error`.
+ */
+export async function deletePart(token: string, partNumber: string): Promise<void> {
+  let res: Response;
+  try {
+    res = await request(
+      `/api/parts/${encodeURIComponent(partNumber)}`,
+      { method: 'DELETE', headers: buildHeaders(token) },
+    );
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new PartsFetchError('PHP API request timed out', 0, { error: 'Request timeout' }, err);
+    }
+    throw new PartsFetchError('PHP API unreachable', 0, { error: 'Network error' }, err);
+  }
+  if (res.status === 404) {
+    const body = await parseErrorBody(res);
+    throw new PartsFetchError(`Part ${partNumber} not found`, 404, body);
+  }
+  if (!res.ok) {
+    const body = await parseErrorBody(res);
+    throw new PartsFetchError(`PHP API returned ${res.status}`, res.status, body);
+  }
+  // 204 No Content — no envelope to unwrap.
+}
+
+/**
  * Coerces a `FormData` payload into the typed shape Zod expects. Kept as a
  * pure helper so the validation logic is unit-testable without a React render.
  *

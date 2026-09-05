@@ -7,6 +7,7 @@ import {
 } from './part-schema';
 import {
   createPart,
+  deletePart,
   formDataToCreateInput,
   formDataToUpdateInput,
   PartsFetchError,
@@ -95,4 +96,45 @@ function fetchErrorToState(err: unknown): { ok: false; fieldErrors: Record<strin
     return { ok: false, fieldErrors: {}, error: err.body.error ?? 'PHP API rejected the request' };
   }
   return { ok: false, fieldErrors: {}, error: 'Could not reach PHP API' };
+}
+
+/**
+ * Server action for the Delete button on the edit form.
+ *
+ * Signature mirrors the latter half of `submitPartAction` (partNumber, token,
+ * _prev, _formData) so a single `bind()` call in the client component wires
+ * it into `useActionState` with the same ergonomics as Save.
+ *
+ * No Zod gate — the Delete form carries no editable fields, only a hidden
+ * `part_number`. The server's own 404 + 403 paths are translated to
+ * field-error-free state shapes so the client renders a single top-level
+ * error message rather than per-field errors.
+ */
+export async function deletePartAction(
+  partNumber: string,
+  token: string,
+  _prev: unknown,
+  _formData: FormData,
+): Promise<
+  | { ok: true; redirectTo: string }
+  | { ok: false; fieldErrors: Record<string, string[]>; error?: string }
+> {
+  try {
+    await deletePart(token, partNumber);
+  } catch (err) {
+    if (err instanceof PartsFetchError) {
+      if (err.status === 404) {
+        // Treat "already gone" as a 404-style top-level error — PartForm uses
+        // the same "Part <sku> not found" copy the edit form uses elsewhere.
+        return { ok: false, fieldErrors: {}, error: `Part ${partNumber} not found` };
+      }
+      return { ok: false, fieldErrors: {}, error: err.body.error ?? 'PHP API rejected the request' };
+    }
+    return { ok: false, fieldErrors: {}, error: 'Could not reach PHP API' };
+  }
+  revalidatePath('/admin/inventory');
+  return {
+    ok: true,
+    redirectTo: `/admin/inventory?deleted=${encodeURIComponent(partNumber)}`,
+  };
 }
