@@ -7,13 +7,18 @@ import { PartsTable } from '@/components/admin/PartsTable';
 import { EmptyState } from '@/components/admin/EmptyState';
 
 interface AdminInventoryPageProps {
-  readonly searchParams: Promise<{ readonly created?: string; readonly updated?: string }>;
+  readonly searchParams: Promise<{
+    readonly created?: string;
+    readonly updated?: string;
+    readonly deleted?: string;
+  }>;
 }
 
 /**
- * Auth-gated parts list page. Reads `?created=<sku>` / `?updated=<sku>`
- * (set by `submitPartAction` after a successful create/edit) and renders a
- * success banner above the table.
+ * Auth-gated parts list page. Reads `?created=<sku>` / `?updated=<sku>` /
+ * `?deleted=<sku>` (set by `submitPartAction` after create/edit and by
+ * `deletePartAction` after a successful delete) and renders a success banner
+ * above the table.
  *
  * Throws from `listParts` propagate to the route's `error.tsx` boundary; the
  * empty-result case renders the `<EmptyState>` instead.
@@ -27,7 +32,7 @@ export default async function AdminInventoryPage({
   }
 
   const parts = await listParts(token);
-  const { created, updated } = await searchParams;
+  const { created, updated, deleted } = await searchParams;
 
   return (
     <section className="container mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10">
@@ -55,6 +60,9 @@ export default async function AdminInventoryPage({
       {updated !== undefined ? (
         <SuccessBanner sku={updated} kind="updated" />
       ) : null}
+      {deleted !== undefined ? (
+        <SuccessBanner sku={deleted} kind="deleted" />
+      ) : null}
 
       {parts.length === 0 ? <EmptyState /> : <PartsTable parts={parts} />}
     </section>
@@ -63,11 +71,19 @@ export default async function AdminInventoryPage({
 
 interface SuccessBannerProps {
   readonly sku: string;
-  readonly kind: 'created' | 'updated';
+  readonly kind: 'created' | 'updated' | 'deleted';
 }
 
 function SuccessBanner({ sku, kind }: SuccessBannerProps): React.ReactElement {
-  const verb = kind === 'created' ? 'created' : 'updated';
+  // R12 — exhaustive Record-keyed map. Extending the `kind` union without
+  // updating this object is a compile-time error (rather than the previous
+  // ternary, which would silently fall through to `'updated'`).
+  const verbs: Record<SuccessBannerProps['kind'], string> = {
+    created: 'created',
+    updated: 'updated',
+    deleted: 'deleted',
+  };
+  const verb = verbs[kind];
   return (
     <div
       role="status"

@@ -1,14 +1,26 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import {
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { AlertCircle, Save } from 'lucide-react';
-import { submitPartAction } from '@/lib/parts-actions';
+import { AlertCircle, Save, Trash2 } from 'lucide-react';
+import {
+  deletePartAction,
+  submitPartAction,
+} from '@/lib/parts-actions';
 import { CATEGORIES } from '@/lib/part-schema';
 
 type FormState =
   | { ok: false; fieldErrors: Record<string, string[]>; error?: string }
+  | { ok: true; redirectTo: string };
+
+type DeleteState =
+  | { ok: false; error?: string }
   | { ok: true; redirectTo: string };
 
 interface PartFormProps {
@@ -29,13 +41,26 @@ interface PartFormProps {
 }
 
 const INITIAL_STATE: FormState = { ok: false, fieldErrors: {} };
+const INITIAL_DELETE_STATE: DeleteState = { ok: false };
+
+/**
+ * Stable id used to associate the edit inputs with the Save Changes form via
+ * HTML5 `form="..."` attribute. R9 requires Save and Delete to be sibling
+ * `<form>` elements (nested forms are dropped by browsers); without this
+ * attribute, the Save form — which wraps only the submit button — would
+ * submit an empty FormData and the edit payload would be lost.
+ */
+const SAVE_FORM_ID = 'part-form-save';
 
 function SubmitButton({
   mode,
+  disabled,
 }: {
   readonly mode: 'create' | 'edit';
+  readonly disabled: boolean;
 }): React.ReactElement {
   const { pending } = useFormStatus();
+  const isDisabled = pending || disabled;
   const label = pending
     ? mode === 'create'
       ? 'Creating…'
@@ -46,7 +71,7 @@ function SubmitButton({
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={isDisabled}
       aria-busy={pending}
       className="inline-flex h-10 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
     >
@@ -110,6 +135,139 @@ function Field({
 const inputClass =
   'block h-10 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/40';
 
+interface DeleteFormProps {
+  readonly partNumber: string;
+  readonly token: string;
+  /** Notified when the delete submission is in flight so the Save button can
+   *  disable during the pending window (R11 — concurrent-edit prevention). */
+  readonly onPendingChange: (pending: boolean) => void;
+}
+
+/**
+ * Two-step destructive action for the edit page. Click Delete → button
+ * toggles into a "Cancel" + "Confirm Delete" pair; Escape cancels and
+ * returns focus to the (restored) Delete button. The component owns its own
+ * `useActionState` and error alert because R9's sibling-form restructure
+ * prevents it from writing into the parent edit form's state shape.
+ */
+function DeleteForm({
+  partNumber,
+  token,
+  onPendingChange,
+}: DeleteFormProps): React.ReactElement {
+  const router = useRouter();
+  const [state, formAction] = useActionState<DeleteState, FormData>(
+    deletePartAction.bind(null, partNumber, token),
+    INITIAL_DELETE_STATE,
+  );
+  const [confirming, setConfirming] = useState(false);
+  const deleteButtonRef = useRef<HTMLButtonElement>(null);
+  const confirmButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (state.ok) {
+      router.push(state.redirectTo);
+      router.refresh();
+    }
+  }, [state, router]);
+
+  // R13: Escape cancels the confirm state and returns focus to the Delete
+  // button (which re-renders once `confirming` flips back to false).
+  useEffect(() => {
+    if (!confirming) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setConfirming(false);
+        // Focus after the Cancel/Confirm pair unmounts and Delete re-mounts.
+        requestAnimationFrame(() => deleteButtonRef.current?.focus());
+      }
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [confirming]);
+
+  // R13: When toggling into the confirm state, move focus to the new Confirm
+  // button so the next Enter press fires the destructive action without an
+  // extra Tab.
+  useEffect(() => {
+    if (confirming) {
+      requestAnimationFrame(() => confirmButtonRef.current?.focus());
+    }
+  }, [confirming]);
+
+  return (
+    <div className="flex flex-col items-end gap-2">
+      {state.ok === false && state.error !== undefined ? (
+        <p
+          role="alert"
+          className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+        >
+          {state.error}
+        </p>
+      ) : null}
+
+      <div className="flex items-center gap-2">
+        {confirming ? (
+          <>
+            <form action={formAction}>
+              <ConfirmDeleteSubmit onPendingChange={onPendingChange} buttonRef={confirmButtonRef} />
+            </form>
+            <button
+              type="button"
+              onClick={() => setConfirming(false)}
+              className="inline-flex h-10 items-center gap-2 rounded-md border border-destructive/40 bg-background px-4 text-sm font-medium text-destructive transition-colors hover:bg-destructive/5"
+            >
+              Cancel
+            </button>
+          </>
+        ) : (
+          <button
+            ref={deleteButtonRef}
+            type="button"
+            onClick={() => setConfirming(true)}
+            className="inline-flex h-10 items-center gap-2 rounded-md border border-destructive/40 bg-background px-4 text-sm font-medium text-destructive transition-colors hover:bg-destructive/5"
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Submit button for the confirm step. Lives inside its own `<form>` so
+ * `useFormStatus` reads the parent form's pending state. Reports pending
+ * upward via `onPendingChange` so the parent PartForm can disable the Save
+ * Changes button (R11).
+ */
+function ConfirmDeleteSubmit({
+  onPendingChange,
+  buttonRef,
+}: {
+  readonly onPendingChange: (pending: boolean) => void;
+  readonly buttonRef: React.RefObject<HTMLButtonElement | null>;
+}): React.ReactElement {
+  const { pending } = useFormStatus();
+  useEffect(() => {
+    onPendingChange(pending);
+  }, [pending, onPendingChange]);
+
+  return (
+    <button
+      ref={buttonRef}
+      type="submit"
+      disabled={pending}
+      aria-busy={pending}
+      className="inline-flex h-10 items-center gap-2 rounded-md bg-destructive px-4 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      {pending ? 'Deleting…' : 'Confirm Delete'}
+    </button>
+  );
+}
+
 export function PartForm({
   mode,
   token,
@@ -117,6 +275,7 @@ export function PartForm({
   initialValues,
 }: PartFormProps): React.ReactElement {
   const router = useRouter();
+  const [deleting, setDeleting] = useState(false);
   // Bind the server action with the mode + partNumber + token so the
   // client-side handler signature matches useActionState's expected
   // (prev, formData) shape. `bind()` is the canonical way to plumb
@@ -140,8 +299,10 @@ export function PartForm({
     }
   }, [state, router]);
 
+  const isEdit = mode === 'edit';
+
   return (
-    <form action={formAction} className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5">
       <Field
         id="part_number"
         label="Part number (SKU)"
@@ -150,15 +311,16 @@ export function PartForm({
         <input
           id="part_number"
           name="part_number"
+          form={SAVE_FORM_ID}
           type="text"
           required
           maxLength={50}
           defaultValue={partNumber ?? ''}
-          readOnly={mode === 'edit'}
-          aria-describedby={mode === 'edit' ? 'part_number-readonly' : undefined}
-          className={`${inputClass} font-mono ${mode === 'edit' ? 'cursor-not-allowed bg-muted text-muted-foreground' : ''}`}
+          readOnly={isEdit}
+          aria-describedby={isEdit ? 'part_number-readonly' : undefined}
+          className={`${inputClass} font-mono ${isEdit ? 'cursor-not-allowed bg-muted text-muted-foreground' : ''}`}
         />
-        {mode === 'edit' ? (
+        {isEdit ? (
           <span id="part_number-readonly" className="sr-only">
             Part number is read-only on the edit page.
           </span>
@@ -173,6 +335,7 @@ export function PartForm({
         <input
           id="name"
           name="name"
+          form={SAVE_FORM_ID}
           type="text"
           required
           maxLength={255}
@@ -189,6 +352,7 @@ export function PartForm({
         <textarea
           id="description"
           name="description"
+          form={SAVE_FORM_ID}
           required
           rows={3}
           defaultValue={initialValues?.description ?? ''}
@@ -206,6 +370,7 @@ export function PartForm({
           <input
             id="unit_cost"
             name="unit_cost"
+            form={SAVE_FORM_ID}
             type="number"
             required
             min={0}
@@ -223,6 +388,7 @@ export function PartForm({
           <input
             id="inventory_qty"
             name="inventory_qty"
+            form={SAVE_FORM_ID}
             type="number"
             required
             min={0}
@@ -242,6 +408,7 @@ export function PartForm({
         <input
           id="bin_location"
           name="bin_location"
+          form={SAVE_FORM_ID}
           type="text"
           maxLength={50}
           defaultValue={initialValues?.bin_location ?? ''}
@@ -257,6 +424,7 @@ export function PartForm({
         <select
           id="category"
           name="category"
+          form={SAVE_FORM_ID}
           required
           defaultValue={initialValues?.category ?? ''}
           className={inputClass}
@@ -282,6 +450,7 @@ export function PartForm({
         <input
           id="manufacturer"
           name="manufacturer"
+          form={SAVE_FORM_ID}
           type="text"
           required
           maxLength={100}
@@ -299,9 +468,19 @@ export function PartForm({
         </p>
       ) : null}
 
-      <div>
-        <SubmitButton mode={mode} />
+      <div className={isEdit ? 'flex items-center justify-between' : 'flex'}>
+        <form id={SAVE_FORM_ID} action={formAction}>
+          <SubmitButton mode={mode} disabled={deleting} />
+        </form>
+
+        {isEdit && partNumber !== undefined ? (
+          <DeleteForm
+            partNumber={partNumber}
+            token={token}
+            onPendingChange={setDeleting}
+          />
+        ) : null}
       </div>
-    </form>
+    </div>
   );
 }
