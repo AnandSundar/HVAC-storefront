@@ -97,6 +97,11 @@ class PartController
      * Returns 204 No Content on success (idiomatic REST for DELETE).
      * 404 falls through the route-model binding (firstOrFail) via the bootstrap
      * exception handler, which renders JSON because the path matches `api/*`.
+     *
+     * ORDER MATTERS: the admin-token gate MUST run before `$part->delete()`. A
+     * 403 must never delete the row — that's the fail-closed invariant. The
+     * `test_destroy_without_admin_token_returns_403` test asserts this via
+     * `assertDatabaseHas` on the 403 path.
      */
     public function destroy(Request $request, Part $part): \Symfony\Component\HttpFoundation\Response
     {

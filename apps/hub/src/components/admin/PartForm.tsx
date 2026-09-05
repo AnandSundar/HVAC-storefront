@@ -161,6 +161,7 @@ function DeleteForm({
     INITIAL_DELETE_STATE,
   );
   const [confirming, setConfirming] = useState(false);
+  const [pending, setPending] = useState(false);
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -173,13 +174,20 @@ function DeleteForm({
 
   // R13: Escape cancels the confirm state and returns focus to the Delete
   // button (which re-renders once `confirming` flips back to false).
+  //
+  // The keydown listener is attached to `document` so Escape works regardless
+  // of focus location — including from the Cancel or Confirm button itself.
+  // The cleanup function removes it on unmount or when `confirming` flips.
+  // The post-cancel focus uses `requestAnimationFrame` so it fires after the
+  // Cancel/Confirm pair unmounts and the Delete button remounts. The focus
+  // call is null-safe via optional chaining in case the component unmounted
+  // mid-frame (e.g., user navigated away).
   useEffect(() => {
     if (!confirming) return;
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
         setConfirming(false);
-        // Focus after the Cancel/Confirm pair unmounts and Delete re-mounts.
         requestAnimationFrame(() => deleteButtonRef.current?.focus());
       }
     };
@@ -207,16 +215,25 @@ function DeleteForm({
         </p>
       ) : null}
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-2">
         {confirming ? (
           <>
             <form action={formAction}>
-              <ConfirmDeleteSubmit onPendingChange={onPendingChange} buttonRef={confirmButtonRef} />
+              <ConfirmDeleteSubmit
+                onPendingChange={onPendingChange}
+                onLocalPendingChange={setPending}
+                buttonRef={confirmButtonRef}
+              />
             </form>
             <button
               type="button"
               onClick={() => setConfirming(false)}
-              className="inline-flex h-10 items-center gap-2 rounded-md border border-destructive/40 bg-background px-4 text-sm font-medium text-destructive transition-colors hover:bg-destructive/5"
+              // R11: Cancel is disabled while the destructive action is in
+              // flight. Otherwise clicking Cancel flips the UI back to the
+              // Delete button, but the in-flight server action still resolves
+              // and the success-navigate effect overrides the user's intent.
+              disabled={pending}
+              className="inline-flex h-10 items-center gap-2 rounded-md border border-destructive/40 bg-background px-4 text-sm font-medium text-destructive transition-colors hover:bg-destructive/5 disabled:cursor-not-allowed disabled:opacity-60"
             >
               Cancel
             </button>
@@ -226,7 +243,8 @@ function DeleteForm({
             ref={deleteButtonRef}
             type="button"
             onClick={() => setConfirming(true)}
-            className="inline-flex h-10 items-center gap-2 rounded-md border border-destructive/40 bg-background px-4 text-sm font-medium text-destructive transition-colors hover:bg-destructive/5"
+            disabled={pending}
+            className="inline-flex h-10 items-center gap-2 rounded-md border border-destructive/40 bg-background px-4 text-sm font-medium text-destructive transition-colors hover:bg-destructive/5 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Trash2 className="h-4 w-4" />
             Delete
@@ -241,19 +259,23 @@ function DeleteForm({
  * Submit button for the confirm step. Lives inside its own `<form>` so
  * `useFormStatus` reads the parent form's pending state. Reports pending
  * upward via `onPendingChange` so the parent PartForm can disable the Save
- * Changes button (R11).
+ * Changes button (R11), and locally via `onLocalPendingChange` so the
+ * DeleteForm can disable the Cancel button during the same window.
  */
 function ConfirmDeleteSubmit({
   onPendingChange,
+  onLocalPendingChange,
   buttonRef,
 }: {
   readonly onPendingChange: (pending: boolean) => void;
+  readonly onLocalPendingChange: (pending: boolean) => void;
   readonly buttonRef: React.RefObject<HTMLButtonElement | null>;
 }): React.ReactElement {
   const { pending } = useFormStatus();
   useEffect(() => {
     onPendingChange(pending);
-  }, [pending, onPendingChange]);
+    onLocalPendingChange(pending);
+  }, [pending, onPendingChange, onLocalPendingChange]);
 
   return (
     <button

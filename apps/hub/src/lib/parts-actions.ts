@@ -117,7 +117,7 @@ export async function deletePartAction(
   _formData: FormData,
 ): Promise<
   | { ok: true; redirectTo: string }
-  | { ok: false; fieldErrors: Record<string, string[]>; error?: string }
+  | { ok: false; error?: string }
 > {
   try {
     await deletePart(token, partNumber);
@@ -126,13 +126,20 @@ export async function deletePartAction(
       if (err.status === 404) {
         // Treat "already gone" as a 404-style top-level error — PartForm uses
         // the same "Part <sku> not found" copy the edit form uses elsewhere.
-        return { ok: false, fieldErrors: {}, error: `Part ${partNumber} not found` };
+        return { ok: false, error: `Part ${partNumber} not found` };
       }
-      return { ok: false, fieldErrors: {}, error: err.body.error ?? 'PHP API rejected the request' };
+      return { ok: false, error: err.body.error ?? 'PHP API rejected the request' };
     }
-    return { ok: false, fieldErrors: {}, error: 'Could not reach PHP API' };
+    return { ok: false, error: 'Could not reach PHP API' };
   }
-  revalidatePath('/admin/inventory');
+  // The DELETE has already succeeded on the PHP side at this point; if
+  // cache invalidation throws we still want the UI to navigate away so the
+  // user doesn't see a deleted part as still-present in the inventory list.
+  try {
+    revalidatePath('/admin/inventory');
+  } catch (err) {
+    console.error('revalidatePath failed after delete:', err);
+  }
   return {
     ok: true,
     redirectTo: `/admin/inventory?deleted=${encodeURIComponent(partNumber)}`,

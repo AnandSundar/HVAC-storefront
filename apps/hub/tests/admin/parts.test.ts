@@ -515,6 +515,9 @@ describe('deletePart', () => {
       expect(init?.method).toBe('DELETE');
       const headers = init?.headers as Record<string, string> | undefined;
       expect(headers?.['X-Admin-Token']).toBe(ADMIN_TOKEN);
+      // Accept: application/json documents that we want Laravel's JSON
+      // exception renderer for non-2xx (otherwise Laravel returns HTML404).
+      expect(headers?.['Accept']).toBe('application/json');
       // 204 No Content — empty body, status only.
       return new Response(null, { status: 204, statusText: 'No Content' });
     });
@@ -649,7 +652,6 @@ describe('deletePartAction', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error).toBe('Admin authentication required');
-      expect(result.fieldErrors).toEqual({});
     }
     expect(revalidatePath).not.toHaveBeenCalled();
   });
@@ -675,7 +677,6 @@ describe('deletePartAction', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error).toBe('Part PHP-001 not found');
-      expect(result.fieldErrors).toEqual({});
     }
   });
 
@@ -696,7 +697,6 @@ describe('deletePartAction', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error).toBe('Network error');
-      expect(result.fieldErrors).toEqual({});
     }
   });
 });
