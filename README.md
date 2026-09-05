@@ -87,6 +87,8 @@ pnpm dev
 
 This boots all four apps in parallel via Turborepo. Each app has its own README with per-app setup.
 
+- `apps/php-api/.env` must set `ADMIN_TOKEN=test-secret` to match the hub's default; otherwise `POST /api/parts` returns 403 from inside the admin UI.
+
 ---
 
 ## Why this exists
