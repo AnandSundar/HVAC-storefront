@@ -112,6 +112,15 @@ async function parseErrorBody(res: Response): Promise<PartsFetchError['body']> {
       return { errors };
     }
   }
+  // Non-422 JSON bodies carrying a string `error` field propagate verbatim —
+  // e.g. PartController::adminTokenIsValid responds with "Admin authentication
+  // required", which is more useful to the user than the generic 403 statusText.
+  if (typeof raw === 'object' && raw !== null) {
+    const upstreamError = (raw as { error?: unknown }).error;
+    if (typeof upstreamError === 'string') {
+      return { error: upstreamError };
+    }
+  }
   return { error: res.statusText || 'Request failed' };
 }
 

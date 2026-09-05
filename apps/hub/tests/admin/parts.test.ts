@@ -179,6 +179,40 @@ describe('listParts', () => {
     expect(err).toBeInstanceOf(PartsFetchError);
     expect((err as InstanceType<typeof PartsFetchError>).body).toEqual({ error: 'Network error' });
   });
+
+  it('propagates the upstream JSON `error` field on a non-422 non-2xx (e.g. 403)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse({ error: 'Admin authentication required' }, 403, 'Forbidden'),
+      ),
+    );
+    const { listParts, PartsFetchError } = await import('../../src/lib/parts');
+    const err = await listParts(ADMIN_TOKEN).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(PartsFetchError);
+    expect((err as InstanceType<typeof PartsFetchError>).status).toBe(403);
+    expect((err as InstanceType<typeof PartsFetchError>).body).toEqual({
+      error: 'Admin authentication required',
+    });
+  });
+
+  it('falls back to res.statusText when a non-2xx body is not JSON (e.g. 403 HTML)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        new Response('<html>Forbidden</html>', {
+          status: 403,
+          statusText: 'Forbidden',
+          headers: { 'Content-Type': 'text/html' },
+        }),
+      ),
+    );
+    const { listParts, PartsFetchError } = await import('../../src/lib/parts');
+    const err = await listParts(ADMIN_TOKEN).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(PartsFetchError);
+    expect((err as InstanceType<typeof PartsFetchError>).status).toBe(403);
+    expect((err as InstanceType<typeof PartsFetchError>).body).toEqual({ error: 'Forbidden' });
+  });
 });
 
 describe('getPart', () => {
