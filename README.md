@@ -15,7 +15,7 @@
 
 <img width="1097" height="947" alt="image" src="https://github.com/user-attachments/assets/70c3a08d-089c-4a3e-b062-4569048f7b0d" />
 
-- **Node GraphQL API and PHP REST API** (live, on Render)
+- **Node GraphQL API and PHP REST API** 
 
 <img width="1070" height="960" alt="image" src="https://github.com/user-attachments/assets/74ae4254-1425-4d2c-9946-bd5ecae75591" />
 
