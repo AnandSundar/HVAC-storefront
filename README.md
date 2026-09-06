@@ -7,7 +7,7 @@
 
 ## Screenshots
 
-- **Hub** (recruiter landing page)
+- **Hub** (landing page)
 
 <img width="1091" height="897" alt="image" src="https://github.com/user-attachments/assets/a076f5b3-97e1-47f1-a619-047dc833c8ba" />
 
