@@ -1,18 +1,24 @@
 # hvac-fullstack-portfolio
 
-> Recruiter-facing portfolio demonstrating **Next.js**, **Node.js + GraphQL**, **PHP (Laravel 11)**, and **TypeScript**.
+> Portfolio demonstrating **Next.js**, **Node.js + GraphQL**, **PHP (Laravel 11)**, and **TypeScript**.
 > Senior Software Engineer – Full Stack Developer (HVAC Distribution client).
 
 ---
 
-## Live demo
+## Screenshots
 
-- **Hub** (recruiter landing page): <https://hvac-fullstack-portfolio-hub.vercel.app>
-- **Storefront** (HVAC parts eCommerce demo): <https://hvac-fullstack-portfolio-storefront.vercel.app>
-- **Node GraphQL API** (live, on Render): <https://hvac-fullstack-portfolio-api.onrender.com/graphql>
-- **PHP REST API** (one-click deploy button in [`apps/php-api/README.md`](apps/php-api/README.md))
+- **Hub** (recruiter landing page)
 
-These URLs are populated after U2–U4 deploy.
+<img width="1091" height="897" alt="image" src="https://github.com/user-attachments/assets/a076f5b3-97e1-47f1-a619-047dc833c8ba" />
+
+- **Storefront** (HVAC parts eCommerce demo)
+
+<img width="1097" height="947" alt="image" src="https://github.com/user-attachments/assets/70c3a08d-089c-4a3e-b062-4569048f7b0d" />
+
+- **Node GraphQL API and PHP REST API** (live, on Render)
+
+<img width="1070" height="960" alt="image" src="https://github.com/user-attachments/assets/74ae4254-1425-4d2c-9946-bd5ecae75591" />
+
 
 ---
 
@@ -30,7 +36,7 @@ These URLs are populated after U2–U4 deploy.
 
 ---
 
-## Five JD technologies demonstrated
+## Five technologies demonstrated
 
 - **Next.js** — `apps/hub` (portfolio landing), `apps/storefront` (eCommerce demo)
 - **Node.js** — `apps/api` (Express + GraphQL service for the storefront)
@@ -45,16 +51,6 @@ These URLs are populated after U2–U4 deploy.
 The full decision matrix lives in **[`docs/CONTROLS.md`](docs/CONTROLS.md)** — what was chosen, why, and what alternatives were considered (monorepo tooling, GraphQL framework, deployment topology, data-variation strategy, etc.).
 
 ---
-
-## Documentation walk order
-
-Per the interview-prep pattern (README → talking-points → CONTROLS → diagrams → runbook):
-
-1. [`docs/README.md`](docs/README.md) — 30-second pitch
-2. [`docs/talking-points.md`](docs/talking-points.md) — interview answers per technology
-3. [`docs/CONTROLS.md`](docs/CONTROLS.md) — architecture decisions matrix
-4. [`docs/diagrams/`](docs/diagrams) — architecture, data-flow, deploy SVGs
-5. [`docs/runbook.md`](docs/runbook.md) — deploy steps, env setup, troubleshooting
 
 ### High-level topology
 
