@@ -30,7 +30,7 @@ export const profile: Profile = {
   pitch:
     'Senior Software Engineer who ships well-architected features end-to-end. I have built production systems across Next.js, Node.js + GraphQL, PHP/Laravel, and TypeScript — comfortable picking the right tool for each layer rather than defaulting to a single stack.',
   bio:
-    'I have spent the last several years building and shipping production web applications across the JavaScript and PHP ecosystems. My recent focus has been on full-stack TypeScript: Next.js front-ends, React 19 server components, and persistent client state with Zustand. I care about readable code, predictable deploys, and small enough scope that the system can actually be understood. This monorepo is the evidence I bring to the Robert Half interview — a Next.js storefront and hub demonstrating the JD technology stack end-to-end through a shared data layer.',
+    'Several years of shipping production web applications across multiple stacks — Next.js 15 with React 19 server components and persistent Zustand state on the front end, Node.js 22 with graphql-yoga + Pothos for the GraphQL layer, and Laravel 11 with Eloquent ORM on the PHP side. I default to readable code, predictable deploys, and small enough scope that the system actually fits in your head. This monorepo is the working example: a Next.js storefront and hub, with each layer wired through a shared data package.',
   location: 'Remote – open to client-site in the Pacific Northwest',
   email: 'anandsundar96@gmail.com',
   githubUrl: 'https://github.com/AnandSundar',
