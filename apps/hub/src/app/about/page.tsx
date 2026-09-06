@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Mail, MapPin, FileText, Github, Linkedin } from 'lucide-react';
+import { Mail, MapPin, Github, Linkedin } from 'lucide-react';
 import { TechBadge } from '@/components/TechBadge';
 import { profile, skillsByCategory, type SkillCategory } from '@/data/profile';
 
@@ -84,17 +84,6 @@ export default function AboutPage(): React.ReactElement {
               <span className="font-medium">LinkedIn profile</span>
             </a>
           </li>
-          <li className="sm:col-span-2">
-            <a
-              href={profile.resumeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-md border border-border bg-card px-4 py-3 text-sm transition-colors hover:bg-accent"
-            >
-              <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <span className="font-medium">Resume (PDF)</span>
-            </a>
-          </li>
         </ul>
       </section>
 
@@ -105,14 +94,6 @@ export default function AboutPage(): React.ReactElement {
         >
           Tech Stack Matrix
         </h2>
-        <p className="mb-6 text-sm text-muted-foreground">
-          Grouped by category. Proficiency is honest:{' '}
-          <span className="font-medium">expert</span> means I have shipped it to
-          production; <span className="font-medium">proficient</span> means I am
-          comfortable using it under time pressure;{' '}
-          <span className="font-medium">familiar</span> means I have used it but
-          would lean on documentation.
-        </p>
 
         <div className="space-y-8">
           {SKILL_CATEGORY_ORDER.map((category) => {
