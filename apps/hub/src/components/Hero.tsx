@@ -28,16 +28,16 @@ export function Hero(): React.ReactElement {
       </p>
 
       <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-        <span className="font-medium text-foreground">Five techs. One monorepo.</span>
+        <span className="font-medium text-foreground">Next.js, end-to-end.</span>
         <span aria-hidden="true">·</span>
-        <span>Next.js, Node.js + GraphQL, PHP, TypeScript</span>
+        <span>TypeScript strict, server components, persistent cart</span>
       </div>
 
       <a
         href="#projects-heading"
         className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:text-primary/80"
       >
-        See the four projects
+        See the storefront
         <ArrowDown className="h-4 w-4" />
       </a>
     </section>

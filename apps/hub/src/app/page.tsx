@@ -17,7 +17,7 @@ export default function HomePage(): React.ReactElement {
               Projects
             </h2>
             <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-              Four deployable surfaces demonstrating the JD technology stack.
+              The deployable storefront surface from the monorepo.
             </p>
           </div>
         </div>

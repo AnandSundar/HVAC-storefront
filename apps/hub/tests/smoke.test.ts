@@ -4,17 +4,12 @@ import { profile, skillsByCategory } from '../src/data/profile';
 import { cn } from '../src/lib/cn';
 
 describe('smoke – project data', () => {
-  it('has exactly 4 projects', () => {
-    expect(projects).toHaveLength(4);
+  it('has exactly 1 project', () => {
+    expect(projects).toHaveLength(1);
   });
 
-  it('contains the four expected slugs', () => {
-    expect(projectSlugs).toEqual([
-      'storefront',
-      'node-api',
-      'php-api',
-      'about',
-    ]);
+  it('contains the storefront slug', () => {
+    expect(projectSlugs).toEqual(['storefront']);
   });
 
   it('every project has a unique slug', () => {
@@ -37,7 +32,6 @@ describe('smoke – project data', () => {
 
   it('findProject returns the right project for a known slug', () => {
     expect(findProject('storefront')?.title).toBe('HVAC Parts Storefront');
-    expect(findProject('node-api')?.title).toBe('Node.js GraphQL API');
   });
 
   it('findProject returns undefined for an unknown slug', () => {

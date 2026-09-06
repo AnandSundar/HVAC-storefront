@@ -6,17 +6,15 @@
 
 ## What this is
 
-A monorepo that ships one demo per technology in the JD:
-**Next.js**, **Node.js**, **GraphQL**, **PHP**, **TypeScript**.
-Five apps, one shared data package, deployable end-to-end in under 10 minutes.
+A Next.js 15 monorepo that demonstrates the JD technology stack end-to-end:
+**Next.js**, **React 19**, **TypeScript**, **Tailwind CSS**, **Zustand**.
+Two apps (hub + storefront), one shared data package, deployable end-to-end in under 10 minutes.
 
 ```text
 hvac-fullstack-portfolio/
 ├── apps/
 │   ├── hub/            Next.js 15 portfolio landing page
-│   ├── storefront/     Next.js 15 HVAC parts eCommerce demo
-│   ├── api/            Node.js 22 + graphql-yoga + Pothos
-│   └── php-api/        Laravel 11 + SQLite REST API
+│   └── storefront/     Next.js 15 HVAC parts eCommerce demo
 └── packages/
     └── shared-data/    TS types + 25 HVAC product fixtures
 ```
@@ -25,22 +23,17 @@ hvac-fullstack-portfolio/
 
 ![Next.js](https://img.shields.io/badge/Next.js-15-000?logo=nextdotjs)
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react)
-![Node.js](https://img.shields.io/badge/Node.js-22-339933?logo=nodedotjs)
-![GraphQL](https://img.shields.io/badge/GraphQL-Yoga-E10098?logo=graphql)
-![Pothos](https://img.shields.io/badge/Schema-Pothos-3178c6)
-![Laravel](https://img.shields.io/badge/Laravel-11-ff2d20?logo=laravel)
-![PHP](https://img.shields.io/badge/PHP-8.4-777bb4?logo=php)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.7_strict-3178c6?logo=typescript)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38bdf8?logo=tailwindcss)
+![Zustand](https://img.shields.io/badge/Zustand-5-4338ca)
 ![pnpm](https://img.shields.io/badge/pnpm-11-F69220?logo=pnpm)
 ![Turborepo](https://img.shields.io/badge/Turborepo-2.x-000?logo=turborepo)
 
-## Five things to look at
+## Three things to look at
 
-1. **Hub** — [`apps/hub`](https://github.com/morninganand/hvac-fullstack-portfolio/tree/main/apps/hub) — the recruiter landing page, four project cards, tech badges, links to live demo.
-2. **Storefront** — [`apps/storefront`](https://github.com/morninganand/hvac-fullstack-portfolio/tree/main/apps/storefront) — product grid, product detail, cart (Zustand), mock checkout.
-3. **Node GraphQL API** — [`apps/api`](https://github.com/morninganand/hvac-fullstack-portfolio/tree/main/apps/api) — `query products(category)` and `mutation createProduct` (admin-only).
-4. **PHP REST API** — [`apps/php-api`](https://github.com/morninganand/hvac-fullstack-portfolio/tree/main/apps/php-api) — Laravel 11 with deliberately different field naming (`part_number`, `unit_cost`, `inventory_qty`) to show cross-stack realism.
-5. **Shared data package** — [`packages/shared-data`](https://github.com/morninganand/hvac-fullstack-portfolio/tree/main/packages/shared-data) — TypeScript types and 25 HVAC product fixtures consumed by all four apps.
+1. **Hub** — [`apps/hub`](https://github.com/AnandSundar/hvac-fullstack-portfolio/tree/main/apps/hub) — the recruiter landing page, project card, tech badges, links to live demo.
+2. **Storefront** — [`apps/storefront`](https://github.com/AnandSundar/hvac-fullstack-portfolio/tree/main/apps/storefront) — product grid, product detail, cart (Zustand), admin header link.
+3. **Shared data package** — [`packages/shared-data`](https://github.com/AnandSundar/hvac-fullstack-portfolio/tree/main/packages/shared-data) — TypeScript types and 25 HVAC product fixtures consumed by both apps.
 
 ## Where to go from here
 

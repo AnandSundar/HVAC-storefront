@@ -13,7 +13,7 @@ corepack enable
 corepack prepare pnpm@11.5.2 --activate
 
 # 2. Clone and install
-git clone https://github.com/morninganand/hvac-fullstack-portfolio.git
+git clone https://github.com/AnandSundar/hvac-fullstack-portfolio.git
 cd hvac-fullstack-portfolio
 pnpm install
 
@@ -73,7 +73,7 @@ No required env vars. The hub is fully static.
 
 ### Hub + Storefront → Vercel
 
-1. Sign in to Vercel, "Add New Project", import `morninganand/hvac-fullstack-portfolio`.
+1. Sign in to Vercel, "Add New Project", import `AnandSundar/hvac-fullstack-portfolio`.
 2. **For the hub:** set Root Directory to `apps/hub`, Framework Preset to Next.js. Override build command to `cd ../.. && pnpm install --frozen-lockfile && pnpm --filter hub build` if the monorepo install complains.
 3. **For the storefront:** same as above with Root Directory `apps/storefront`. Set `NEXT_PUBLIC_API_URL` to your Render API URL.
 4. Deploy. Both auto-deploy on push to `main`.
@@ -93,7 +93,7 @@ No required env vars. The hub is fully static.
 The `apps/php-api/render.yaml` includes a deploy button that any Render user can click:
 
 ```markdown
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/morninganand/hvac-fullstack-portfolio/tree/main/apps/php-api)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/AnandSundar/hvac-fullstack-portfolio/tree/main/apps/php-api)
 ```
 
 This forks the repo into the recruiter's account and creates a Laravel service.

@@ -38,7 +38,7 @@
 
   <!-- Row 2: GitHub -->
   <rect x="40" y="200" width="880" height="120" class="gh-box"/>
-  <text x="60" y="225" class="label-light">github.com/morninganand/hvac-fullstack-portfolio</text>
+  <text x="60" y="225" class="label-light">github.com/AnandSundar/hvac-fullstack-portfolio</text>
   <text x="60" y="245" class="label-sub-light">Single repo, five apps, monorepo via pnpm workspaces</text>
 
   <rect x="60" y="260" width="170" height="50" fill="#0f172a" stroke="#475569" rx="4"/>

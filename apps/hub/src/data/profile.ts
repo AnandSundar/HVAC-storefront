@@ -25,17 +25,17 @@ export interface Profile {
 }
 
 export const profile: Profile = {
-  name: 'Anand Morning',
+  name: 'Anand Sundar',
   headline: 'Senior Software Engineer – Full Stack Developer',
   pitch:
-    'Senior Software Engineer focused on building practical, full-stack systems for HVAC distribution and digital commerce. I work across Next.js, Node.js + GraphQL, and PHP, with a habit of shipping code that recruiters can read end-to-end in 5-10 minutes.',
+    'Senior Software Engineer focused on building practical, full-stack systems for HVAC distribution and digital commerce. I work across Next.js, TypeScript, and modern web stacks, with a habit of shipping code that recruiters can read end-to-end in 5-10 minutes.',
   bio:
-    'I have spent the last several years building and shipping production web applications across the JavaScript and PHP ecosystems. My recent focus has been on full-stack TypeScript: Next.js front-ends, Node.js GraphQL services, and Laravel REST APIs. I care about readable code, predictable deploys, and small enough scope that the system can actually be understood. This monorepo is the evidence I bring to the Robert Half interview — five deployable surfaces demonstrating Next.js, Node.js, GraphQL, PHP, and TypeScript, all wired together through a shared data layer.',
+    'I have spent the last several years building and shipping production web applications across the JavaScript and PHP ecosystems. My recent focus has been on full-stack TypeScript: Next.js front-ends, React 19 server components, and persistent client state with Zustand. I care about readable code, predictable deploys, and small enough scope that the system can actually be understood. This monorepo is the evidence I bring to the Robert Half interview — a Next.js storefront and hub demonstrating the JD technology stack end-to-end through a shared data layer.',
   location: 'Remote – open to client-site in the Pacific Northwest',
   email: 'anand@example.com',
-  githubUrl: 'https://github.com/morninganand',
-  linkedinUrl: 'https://www.linkedin.com/in/morninganand',
-  resumeUrl: 'https://github.com/morninganand/hvac-fullstack-portfolio/blob/main/docs/resume.pdf',
+  githubUrl: 'https://github.com/AnandSundar',
+  linkedinUrl: 'https://www.linkedin.com/in/anandsundar96/',
+  resumeUrl: 'https://github.com/AnandSundar/hvac-fullstack-portfolio/blob/main/docs/resume.pdf',
   skills: [
     { name: 'Next.js (App Router, RSC)', category: 'Frontend', proficiency: 'expert' },
     { name: 'React 19', category: 'Frontend', proficiency: 'expert' },

@@ -3,7 +3,7 @@
 > Recruiter-facing landing page for the HVAC full-stack portfolio monorepo.
 > Built with Next.js 15 App Router, TypeScript strict, and shadcn-style UI primitives.
 
-This is the first thing a recruiter clicks. It links to every other deployable surface in the monorepo (storefront, Node GraphQL API, PHP REST API).
+This is the first thing a recruiter clicks. It links to the deployable storefront in the same monorepo.
 
 ---
 
@@ -51,7 +51,7 @@ apps/hub/
 │   │   ├── projects/[slug]/page.tsx – Per-project long-form page
 │   │   ├── globals.css           – Tailwind + CSS variables
 │   │   ├── layout.tsx            – Root layout, font, metadata
-│   │   └── page.tsx              – Home (hero + 4 project cards)
+│   │   └── page.tsx              – Home (hero + project card)
 │   ├── components/
 │   │   ├── Footer.tsx
 │   │   ├── Hero.tsx
@@ -60,7 +60,7 @@ apps/hub/
 │   │   └── TechBadge.tsx
 │   ├── data/
 │   │   ├── profile.ts            – Candidate bio + tech stack
-│   │   └── projects.ts           – 4 project cards config
+│   │   └── projects.ts           – Project card config
 │   └── lib/
 │       └── cn.ts                 – clsx + tailwind-merge helper
 ├── tests/
@@ -80,14 +80,11 @@ apps/hub/
 
 | Route | Source | Notes |
 | --- | --- | --- |
-| `/` | `src/app/page.tsx` | Hero + 4 project cards |
+| `/` | `src/app/page.tsx` | Hero + project card |
 | `/about` | `src/app/about/page.tsx` | Bio, contact links, tech stack matrix |
 | `/projects/storefront` | `src/app/projects/[slug]/page.tsx` | Per-project detail (statically generated) |
-| `/projects/node-api` | same | |
-| `/projects/php-api` | same | |
-| `/projects/about` | same | |
 
-The project detail route uses `generateStaticParams` for the four known slugs, so each renders as static HTML at build time. Unknown slugs hit `notFound()` and render the default 404 page.
+The project detail route uses `generateStaticParams` for the single known slug, so it renders as static HTML at build time. Unknown slugs hit `notFound()` and render the default 404 page.
 
 ---
 
@@ -95,9 +92,7 @@ The project detail route uses `generateStaticParams` for the four known slugs, s
 
 | Name | Default | Purpose |
 | --- | --- | --- |
-| `NEXT_PUBLIC_STOREFRONT_URL` | `https://hvac-fullstack-portfolio-storefront.vercel.app` | Live storefront link on Storefront card |
-| `NEXT_PUBLIC_API_URL` | `https://hvac-fullstack-portfolio-api.onrender.com` | Live GraphQL endpoint on Node API card |
-| `NEXT_PUBLIC_PHP_REPO_URL` | `https://github.com/morninganand/hvac-fullstack-portfolio/tree/main/apps/php-api` | GitHub repo link on PHP API card |
+| `NEXT_PUBLIC_STOREFRONT_URL` | `https://hvac-fullstack-portfolio-storefront.vercel.app` | Live storefront link on the Storefront card |
 | `HUB_ADMIN_TOKEN` | `test-secret` (dev only) | Shared admin token for `/admin/*` sign-in. Required in production (the hub fails closed — see `HUB_ADMIN_TOKEN` in `.env.example`). |
 | `PHP_API_URL` | `http://localhost:8000` | Base URL the admin UI calls. Must be `https://` in production. |
 
@@ -116,7 +111,7 @@ pnpm --filter hub build     # Next.js production build
 
 Smoke tests cover:
 
-- Home page renders with the expected 4 project entries
+- Home page renders with the expected project entries
 - Each project slug has a detail page that resolves
 - Profile data has all 5 skill categories populated
 - Tech badge component renders without crashing
@@ -129,7 +124,7 @@ Smoke tests cover:
 
 1. Import the `hvac-fullstack-portfolio` repo.
 2. Set the root directory to `apps/hub`.
-3. Add the three `NEXT_PUBLIC_*` environment variables.
+3. Add the `NEXT_PUBLIC_STOREFRONT_URL` environment variable.
 4. Deploy.
 
 Vercel will run `pnpm install` (root) then `pnpm --filter hub build` via Turborepo. Static pages export via `output: 'standalone'` in `next.config.js`.
