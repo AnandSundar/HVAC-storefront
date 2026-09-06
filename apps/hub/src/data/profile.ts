@@ -28,7 +28,7 @@ export const profile: Profile = {
   name: 'Anand Sundar',
   headline: 'Senior Software Engineer – Full Stack Developer',
   pitch:
-    'Senior Software Engineer focused on building practical, full-stack systems for HVAC distribution and digital commerce. I work across Next.js, TypeScript, and modern web stacks, with a habit of shipping code that recruiters can read end-to-end in 5-10 minutes.',
+    'Senior Software Engineer who ships well-architected features end-to-end. I have built production systems across Next.js, Node.js + GraphQL, PHP/Laravel, and TypeScript — comfortable picking the right tool for each layer rather than defaulting to a single stack.',
   bio:
     'I have spent the last several years building and shipping production web applications across the JavaScript and PHP ecosystems. My recent focus has been on full-stack TypeScript: Next.js front-ends, React 19 server components, and persistent client state with Zustand. I care about readable code, predictable deploys, and small enough scope that the system can actually be understood. This monorepo is the evidence I bring to the Robert Half interview — a Next.js storefront and hub demonstrating the JD technology stack end-to-end through a shared data layer.',
   location: 'Remote – open to client-site in the Pacific Northwest',
