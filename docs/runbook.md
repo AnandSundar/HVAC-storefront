@@ -48,6 +48,7 @@ If you only want one app: `pnpm --filter api dev` (or `hub`, `storefront`, `php-
 | Variable | Required | Default | Purpose |
 | --- | --- | --- | --- |
 | `NEXT_PUBLIC_API_URL` | no | (none) | GraphQL endpoint. If unset, falls back to `data/fallback-products.ts`. |
+| `NEXT_PUBLIC_ADMIN_URL` | no | `http://localhost:3000` | Admin sign-in URL. The storefront header renders an "Admin" link that opens `${NEXT_PUBLIC_ADMIN_URL}/admin/sign-in` in a new tab. Set to your hub's canonical URL in prod (e.g., `https://hvac-fullstack-portfolio-hub.vercel.app`). Production builds throw at first render if this resolves to `localhost` or non-HTTPS — fail-loud, mirroring `getApiUrl` in `apps/hub`. |
 | `PORT` | no | `3001` | Listen port. |
 
 > `NEXT_PUBLIC_*` vars are inlined at build time by Next.js. Set them in Vercel

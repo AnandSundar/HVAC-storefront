@@ -117,7 +117,7 @@ php artisan serve
 
 | # | Action | What to say |
 | - | --- | --- |
-| 1 | Visit `http://localhost:3000/admin/sign-in`, enter `test-secret` | "Mock auth via a shared env token — the realistic alternative to a real auth provider for a portfolio demo." |
+| 1 | From `http://localhost:3001/products`, click the **Admin** link in the header to open `http://localhost:3000/admin/sign-in` in a new tab, enter `test-secret` | "The Admin link in the storefront header is the quick-access path to the admin — same mock auth via a shared env token as before." |
 | 2 | Land on `/admin/inventory` | "The list comes from `GET /api/parts?per_page=100` with the token sent as `X-Admin-Token`." |
 | 3 | Click **Add new part**, fill the form, submit | "Server action with client-side Zod validation. Laravel 422 errors map to per-field messages." |
 | 4 | Watch the green `Created <SKU>` banner | "The action returns `{ ok: true, redirectTo }` and the client `router.push`es with `?created=SKU`." |
