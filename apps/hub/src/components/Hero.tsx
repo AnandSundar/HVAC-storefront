@@ -1,4 +1,4 @@
-import { ArrowDown, Sparkles } from 'lucide-react';
+import { ArrowDown } from 'lucide-react';
 import { profile } from '@/data/profile';
 
 export function Hero(): React.ReactElement {
@@ -7,11 +7,6 @@ export function Hero(): React.ReactElement {
       aria-labelledby="hero-heading"
       className="animate-fade-in"
     >
-      <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
-        <Sparkles className="h-3.5 w-3.5" />
-        <span>Built for the Sept 8, 2026 Robert Half virtual interview</span>
-      </div>
-
       <h1
         id="hero-heading"
         className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl"

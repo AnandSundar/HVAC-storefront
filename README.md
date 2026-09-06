@@ -1,7 +1,7 @@
 # hvac-fullstack-portfolio
 
 > Recruiter-facing portfolio demonstrating **Next.js**, **Node.js + GraphQL**, **PHP (Laravel 11)**, and **TypeScript**.
-> Built for the Sept 8, 2026 Robert Half virtual interview — Senior Software Engineer – Full Stack Developer (HVAC Distribution client).
+> Senior Software Engineer – Full Stack Developer (HVAC Distribution client).
 
 ---
 

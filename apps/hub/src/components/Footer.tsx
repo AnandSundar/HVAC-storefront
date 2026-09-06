@@ -11,7 +11,7 @@ export function Footer(): React.ReactElement {
         <div className="space-y-1">
           <p className="text-sm font-medium">{profile.name}</p>
           <p className="text-xs text-muted-foreground">
-            {year} – Portfolio for the Robert Half virtual interview.
+            {year} – Anand Sundar&rsquo;s portfolio.
           </p>
         </div>
 

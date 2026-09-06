@@ -1,6 +1,5 @@
 # Portfolio walk-through — 30-second pitch
 
-> Built for the Sept 8, 2026 Robert Half virtual interview —
 > Senior Software Engineer – Full Stack Developer
 > (HVAC Distribution client, 12-month contract, Alberta Remote).
 

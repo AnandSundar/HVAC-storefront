@@ -32,7 +32,7 @@ export const profile: Profile = {
   bio:
     'I have spent the last several years building and shipping production web applications across the JavaScript and PHP ecosystems. My recent focus has been on full-stack TypeScript: Next.js front-ends, React 19 server components, and persistent client state with Zustand. I care about readable code, predictable deploys, and small enough scope that the system can actually be understood. This monorepo is the evidence I bring to the Robert Half interview — a Next.js storefront and hub demonstrating the JD technology stack end-to-end through a shared data layer.',
   location: 'Remote – open to client-site in the Pacific Northwest',
-  email: 'anand@example.com',
+  email: 'anandsundar96@gmail.com',
   githubUrl: 'https://github.com/AnandSundar',
   linkedinUrl: 'https://www.linkedin.com/in/anandsundar96/',
   resumeUrl: 'https://github.com/AnandSundar/hvac-fullstack-portfolio/blob/main/docs/resume.pdf',
