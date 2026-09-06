@@ -1,4 +1,4 @@
-# hvac-fullstack-portfolio
+# HVAC Fullstack Portfolio
 
 > Portfolio demonstrating **Next.js**, **Node.js + GraphQL**, **PHP (Laravel 11)**, and **TypeScript**.
 > Senior Software Engineer – Full Stack Developer (HVAC Distribution client).
