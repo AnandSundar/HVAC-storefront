@@ -240,6 +240,7 @@ hvac-fullstack-portfolio/
 │   │   ├── data-flow.svg
 │   │   └── deploy.svg
 │   ├── runbook.md          this file
+│   ├── solutions/          institutional learnings (searchable by frontmatter)
 │   └── plans/
 │       └── 2026-09-04-001-feat-robert-half-portfolio-plan.md
 ├── .github/
