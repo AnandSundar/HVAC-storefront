@@ -124,7 +124,7 @@ php artisan serve
 | 9 | Click **Delete**, then **Confirm Delete** | "Server action returns 204 No Content — idiomatic REST for DELETE." |
 | 10 | Land back on `/admin/inventory`, row gone | "The `?deleted=SKU` banner confirms the round-trip. `revalidatePath` keeps the list fresh." |
 
-### Production safety features to mention if asked
+### Production safety features
 
 - **Admin token fail-closed.** `PartController::adminTokenIsValid` rejects
   requests when `ADMIN_TOKEN` is unset, even if the header carries a guess.
@@ -140,7 +140,7 @@ php artisan serve
 
 ## Why this exists
 
-This repo is the candidate's evidence for the five technologies named in the Robert Half JD. Each app is intentionally small enough to read end-to-end in 5–10 minutes — recruiters reviewing the codebase should find polished code, clear architecture, and a deployment story, not a "real product" with all the complexity that implies.
+This repo is the evidence for the five technologies. Each app is intentionally small enough to read end-to-end in 5–10 minutes — reviewing the codebase should find polished code, clear architecture, and a deployment story, not a "real product" with all the complexity that implies.
 
 See [`docs/CONTROLS.md`](docs/CONTROLS.md) for the explicit scope boundaries and non-goals.
 
